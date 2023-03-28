@@ -15,7 +15,9 @@ _202219808_ACW_700119_D3D11_UWP_APPMain::_202219808_ACW_700119_D3D11_UWP_APPMain
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
-	m_sceneRenderer = std::unique_ptr<Sample3DSceneRenderer>(new Sample3DSceneRenderer(m_deviceResources));
+	m_implicitModelRenderer = std::unique_ptr<ImplicitModelRenderer>(new ImplicitModelRenderer(m_deviceResources));
+	m_vertexShaderRenderer = std::unique_ptr<VSRenderer>(new VSRenderer(m_deviceResources));
+	m_tessellationShaderRenderer = std::unique_ptr<TessellationRenderer>(new TessellationRenderer(m_deviceResources));
 
 	m_fpsTextRenderer = std::unique_ptr<SampleFpsTextRenderer>(new SampleFpsTextRenderer(m_deviceResources));
 
@@ -37,7 +39,9 @@ _202219808_ACW_700119_D3D11_UWP_APPMain::~_202219808_ACW_700119_D3D11_UWP_APPMai
 void _202219808_ACW_700119_D3D11_UWP_APPMain::CreateWindowSizeDependentResources() 
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
-	m_sceneRenderer->CreateWindowSizeDependentResources();
+	m_implicitModelRenderer->CreateWindowSizeDependentResources();
+	m_vertexShaderRenderer->CreateWindowSizeDependentResources();
+	m_tessellationShaderRenderer->CreateWindowSizeDependentResources();
 }
 
 // Updates the application state once per frame.
@@ -47,7 +51,9 @@ void _202219808_ACW_700119_D3D11_UWP_APPMain::Update()
 	m_timer.Tick([&]()
 	{
 		// TODO: Replace this with your app's content update functions.
-		m_sceneRenderer->Update(m_timer);
+		m_implicitModelRenderer->Update(m_timer);
+		m_vertexShaderRenderer->Update(m_timer);
+		m_tessellationShaderRenderer->Update(m_timer);
 		m_fpsTextRenderer->Update(m_timer);
 	});
 }
@@ -78,7 +84,9 @@ bool _202219808_ACW_700119_D3D11_UWP_APPMain::Render()
 
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
-	m_sceneRenderer->Render(m_timer);
+	m_implicitModelRenderer->Render();
+	m_vertexShaderRenderer->Render();
+	m_tessellationShaderRenderer->Render();
 	m_fpsTextRenderer->Render();
 
 	return true;
@@ -87,14 +95,18 @@ bool _202219808_ACW_700119_D3D11_UWP_APPMain::Render()
 // Notifies renderers that device resources need to be released.
 void _202219808_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
 {
-	m_sceneRenderer->ReleaseDeviceDependentResources();
+	m_implicitModelRenderer->ReleaseDeviceDependentResources();
+	m_vertexShaderRenderer->ReleaseDeviceDependentResources();
+	m_tessellationShaderRenderer->ReleaseDeviceDependentResources();
 	m_fpsTextRenderer->ReleaseDeviceDependentResources();
 }
 
 // Notifies renderers that device resources may now be recreated.
 void _202219808_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
 {
-	m_sceneRenderer->CreateDeviceDependentResources();
+	m_implicitModelRenderer->CreateDeviceDependentResources();
+	m_vertexShaderRenderer->CreateDeviceDependentResources();
+	m_tessellationShaderRenderer->CreateDeviceDependentResources();
 	m_fpsTextRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }

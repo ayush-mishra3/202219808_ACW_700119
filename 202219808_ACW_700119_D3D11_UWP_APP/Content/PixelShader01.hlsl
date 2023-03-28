@@ -25,17 +25,18 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 };
 static float iTime = timer.x * 0.5;
 
-static float4 Eye = float4(0, 0, 15, 1);//eye position 
+static float4 Eye = float4(0, 0, 15, 1); //eye position 
 
-struct Ray {
-	float3 o;   // origin 
-	float3 d;   // direction 
+struct Ray
+{
+    float3 o; // origin 
+    float3 d; // direction 
 };
 
 struct VS_Canvas
 {
-	float4 Position   : SV_POSITION;
-	float2 canvasXY   : TEXCOORD0;
+    float4 Position : SV_POSITION;
+    float2 canvasXY : TEXCOORD0;
 };
 
 
@@ -275,17 +276,17 @@ float4 main(VS_Canvas input) : SV_Target
 {
 
 	// specify primary ray: 
-	Ray eyeray;
+    Ray eyeray;
 
-	eyeray.o = Eye.xyz;
+    eyeray.o = Eye.xyz;
 
 	// set ray direction in view space 
-	float dist2Imageplane = 5.0;
-	float3 viewDir = float3(input.canvasXY, -dist2Imageplane);
-	viewDir = normalize(viewDir);
-	eyeray.d = viewDir;
+    float dist2Imageplane = 5.0;
+    float3 viewDir = float3(input.canvasXY, -dist2Imageplane);
+    viewDir = normalize(viewDir);
+    eyeray.d = viewDir;
 
     float4 finalColor;
-	finalColor = render(eyeray, finalColor, input.Position.xy);
-    return  finalColor;
+    finalColor = render(eyeray, finalColor, input.Position.xy);
+    return finalColor;
 }

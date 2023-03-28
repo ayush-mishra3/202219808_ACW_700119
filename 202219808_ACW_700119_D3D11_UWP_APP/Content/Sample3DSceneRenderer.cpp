@@ -58,7 +58,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 		);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 0.7f, 1.5f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 0.7f, 5.5f, 0.0f };
 	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
@@ -198,13 +198,55 @@ void Sample3DSceneRenderer::Render(DX::StepTimer const& timer)
 		0,
 		0
 		);
+
+
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader2.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader2.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	// Draw the objects.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-	auto loadVSTask = DX::ReadDataAsync(L"SampleVertexShader.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"SamplePixelShader.cso");
+	auto loadVSTask = DX::ReadDataAsync(L"VertexShader01.cso");
+	auto loadPSTask = DX::ReadDataAsync(L"PixelShader01.cso");
+	auto loadVSTask2 = DX::ReadDataAsync(L"VertexShader02.cso");
+	auto loadPSTask2 = DX::ReadDataAsync(L"PixelShader02.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) {
@@ -255,8 +297,59 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			);
 	});
 
+	// After the vertex shader file is loaded, create the shader and input layout.
+	auto createVSTask2 = loadVSTask2.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateVertexShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_vertexShader
+			)
+		);
+
+	static const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateInputLayout(
+			vertexDesc,
+			ARRAYSIZE(vertexDesc),
+			&fileData[0],
+			fileData.size(),
+			&m_inputLayout
+		)
+	);
+		});
+
+	// After the pixel shader file is loaded, create the shader and constant buffer.
+	auto createPSTask2 = loadPSTask2.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreatePixelShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_pixelShader2
+			)
+		);
+
+	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&constantBufferDesc,
+			nullptr,
+			&m_constantBuffer
+		)
+	);
+		});
+
 	// Once both shaders are loaded, create the mesh.
-	auto createCubeTask = (createPSTask && createVSTask).then([this] () {
+	auto createCubeTask = (
+		createPSTask && createVSTask && 
+		createPSTask2 && createVSTask2).then([this] () {
 
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor cubeVertices[] = 
@@ -324,6 +417,73 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				&m_indexBuffer
 				)
 			);
+
+		// Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor cubeVertices2[] =
+		{
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+		};
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData2 = { 0 };
+		vertexBufferData2.pSysMem = cubeVertices2;
+		vertexBufferData2.SysMemPitch = 0;
+		vertexBufferData2.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC vertexBufferDesc2(sizeof(cubeVertices2), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc2,
+				&vertexBufferData2,
+				&m_vertexBuffer2
+			)
+		);
+
+		// Load mesh indices. Each trio of indices represents
+		// a triangle to be rendered on the screen.
+		// For example: 0,2,1 means that the vertices with indexes
+		// 0, 2 and 1 from the vertex buffer compose the 
+		// first triangle of this mesh.
+		static const unsigned short cubeIndices2[] =
+		{
+			0,2,1, // -x
+			1,2,3,
+
+			4,5,6, // +x
+			5,7,6,
+
+			0,1,5, // -y
+			0,5,4,
+
+			2,6,7, // +y
+			2,7,3,
+
+			0,4,6, // -z
+			0,6,2,
+
+			1,3,7, // +z
+			1,7,5,
+		};
+
+		m_indexCount = ARRAYSIZE(cubeIndices2);
+
+		D3D11_SUBRESOURCE_DATA indexBufferData2 = { 0 };
+		indexBufferData2.pSysMem = cubeIndices2;
+		indexBufferData2.SysMemPitch = 0;
+		indexBufferData2.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc2(sizeof(cubeIndices2), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc2,
+				&indexBufferData2,
+				&m_indexBuffer2
+			)
+		);
 	});
 
 	// Once the cube is loaded, the object is ready to be rendered.
@@ -336,9 +496,13 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 	m_vertexShader.Reset();
+	m_vertexShader2.Reset();
 	m_inputLayout.Reset();
 	m_pixelShader.Reset();
+	m_pixelShader2.Reset();
 	m_constantBuffer.Reset();
 	m_vertexBuffer.Reset();
+	m_vertexBuffer2.Reset();
 	m_indexBuffer.Reset();
+	m_indexBuffer2.Reset();
 }
