@@ -4,12 +4,12 @@
 #include "..\Common\StepTimer.h"
 #include "ShaderStructures.h"
 
-namespace _202219808_ACW_700119_D3D11_UWP_APP 
+namespace _202219808_D3D11_APP 
 {
-	class VSRenderer
+	class VertexShaderRenderer
 	{
 	public:
-		VSRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		VertexShaderRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();

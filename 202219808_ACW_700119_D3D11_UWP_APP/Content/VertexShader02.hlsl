@@ -3,8 +3,6 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 	matrix model;
 	matrix view;
 	matrix projection;
-	float4 iResolution;
-	float4 iTime;
 };
 
 struct VS_OUTPUT

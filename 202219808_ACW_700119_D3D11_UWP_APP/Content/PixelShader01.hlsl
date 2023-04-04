@@ -20,12 +20,29 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix model;
     matrix view;
     matrix projection;
-    float4 iResolution;
-    float4 timer;
 };
-static float iTime = timer.x * 0.5;
 
-static float4 Eye = float4(0, 0, 15, 1); //eye position 
+cbuffer CameraConstantBuffer : register(b1)
+    
+{
+    float3  camPos;
+    float padding1;
+};
+
+cbuffer TimeConstantBuffer : register(b2)
+{
+    float iTime;
+    float3 padding2;
+};
+
+cbuffer ResolutionConstantBuffer : register(b3)
+{
+    float sHeight;
+    float sWidth;
+    float2 padding3;
+};
+
+static float4 Eye = float4(0, 2.0, 15, 1); //eye position 
 
 struct Ray
 {
@@ -39,10 +56,9 @@ struct VS_Canvas
     float2 canvasXY : TEXCOORD0;
 };
 
-
 float hash(float n)
 {
-    return fract(sin(n) * 43758.5453);
+    return fract(sin(n) * 73758.5453);
 }
 
 //Hash from iq
@@ -94,7 +110,6 @@ vec3 caustic(vec2 uv)
     return color;
 }
 
-
 // perf increase for god ray, eliminates Y
 float causticX(float x, float power, float gtime)
 {
@@ -117,19 +132,15 @@ float causticX(float x, float power, float gtime)
     return c;
 }
 
-
 float GodRays(vec2 uv)
 {
     float light = 0.0;
-
     light += pow(causticX((uv.x + 0.08 * uv.y) / 1.7 + 0.5, 1.8, iTime * 0.65), 10.0) * 0.05;
     light -= pow((1.0 - uv.y) * 0.3, 2.0) * 0.2;
     light += pow(causticX(sin(uv.x), 0.3, iTime * 0.7), 9.0) * 0.4;
     light += pow(causticX(cos(uv.x * 2.3), 0.3, iTime * 1.3), 4.0) * 0.1;
-
     light -= pow((1.0 - uv.y) * 0.3, 3.0);
     light = clamp(light, 0.0, 1.0);
-
     return light;
 }
 
@@ -138,7 +149,7 @@ vec3 raymarchTerrain(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
     float t = tmin;
     vec3 res = vec3(-1.0, -1.0, -1.0);
 
-    for (int i = 0; i < 110; i++)
+    for (int i = 0; i < 255; i++)
     {
         vec3 p = ro + rd * t;
         float n = noise(p);
@@ -158,42 +169,26 @@ vec3 raymarchTerrain(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
     return res;
 }
 
-
 vec3 getTerrainNormal(in vec3 p)
 {
-    float eps = 0.025;
+    float eps = 0.0045;
+
     return normalize(vec3(noise(vec3(vec2(p.x - eps, p.z), 1.0)) - noise(vec3(vec2(p.x + eps, p.z), 1.0)),
-        2.0 * eps,
+        5.0 * eps,
         noise(vec3(vec2(p.x, p.z - eps), 1.0)) - noise(vec3(vec2(p.x, p.z + eps), 1.0))));
 }
 
-
-float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
+float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 {
-    vec3 skyColor = vec3(0.3, 1.0, 1.0);
-
+    vec3 skyColor      = vec3(0.3, 1.0, 1.0);
     vec3 sunLightColor = vec3(1.7, 0.65, 0.65);
     vec3 skyLightColor = vec3(0.8, 0.35, 0.15);
     vec3 indLightColor = vec3(0.4, 0.3, 0.2);
-    vec3 horizonColor = vec3(0.0, 0.05, 0.2);
-    vec3 sunDirection = normalize(vec3(0.8, 0.8, 0.6));
-
-    vec2 p = (-iResolution.xy + 2.0 * fragCoord) / iResolution.y;
-
-    vec3 eye = vec3(0.0, 1.25, 50.5);
-    /*vec2 rot = 6.2831 * (vec2(-0.05 + iTime * 0.01, 0.0 - sin(iTime * 0.5) * 0.01) + vec2(1.0, 0.0) * (iResolution.xy * 0.25) / iResolution.x);
-    eye.yz = cos(rot.y) * eye.yz + sin(rot.y) * eye.zy * vec2(-1.0, 1.0);
-    eye.xz = cos(rot.x) * eye.xz + sin(rot.x) * eye.zx * vec2(1.0, -1.0);*/
-
-    vec3 ro = eye;
-    vec3 ta = vec3(0.5, 0.0, 30.0);
-
-    vec3 cw = normalize(ta - ro);
-    vec3 cu = normalize(cross(vec3(0.0, 1.0, 0.0), cw));
-    vec3 cv = normalize(cross(cw, cu));
-    mat3 cam = mat3(cu, cv, cw);
-
-    vec3 rd = mul(cam, vec3(-p.xy, 1.0));
+    vec3 horizonColor  = vec3(0.0, 0.05, 0.2);
+    vec3 sunDirection  = normalize(vec3(0.8, 0.8, 0.6));
+    
+    vec3 ro = ray.o; 
+    vec3 rd = ray.d; 
 
     // background
     vec3 color = skyColor;
@@ -201,7 +196,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
 
     // terrain marching
     float tmin = 0.1;
-    float tmax = 20.0;
+    float tmax = 50.0;
     vec3 res = raymarchTerrain(ro, rd, tmin, tmax);
 
     vec3 colorBubble = vec3(0.0, 0.0, 0.0);
@@ -230,12 +225,12 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
 
     if (t < tmax)
     {
-        vec3 pos = ro + rd * t;
+        vec3 pos = ro + t * rd;
         vec3 nor;
 
         // add bumps
         nor = getTerrainNormal(pos);
-        nor = normalize(nor + 0.5 * getTerrainNormal(pos * 8.0));
+        nor = normalize(nor + 1.5 * getTerrainNormal(pos * 10.0));
 
         float sun = clamp(dot(sunDirection, nor), 0.0, 1.0);
         sky = clamp(0.5 + 0.5 * nor.y, 0.0, 1.0);
@@ -243,10 +238,9 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
         vec3 diffuse = vec3(0.5, 0.5, 0.5);
 
         diffuse *= caustic(vec2(mix(pos.x, pos.y, 0.2), mix(pos.z, pos.y, 0.2)) * 1.1);
+        
         vec3 lightColor = 1.0 * sun * sunLightColor;
-
         lightColor += 0.7 * sky * skyLightColor;
-
         color *= 0.8 * diffuse * lightColor;
 
         // fog
@@ -256,7 +250,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
     {
         sky = clamp(0.8 * (1.0 - 0.8 * rd.y), 0.0, 1.0);
         color = sky * skyColor;
-        color += ((0.3 * caustic(vec2(ray.d.x, ray.d.y * 1.0))) + (0.3 * caustic(vec2(ray.d.x, ray.d.y * 2.7)))) * pow(ray.d.y, 4.0);
+        color += ((0.3 * caustic(vec2(uv.x, uv.y * 1.0))) + (0.3 * caustic(vec2(uv.x, uv.y * 2.7)))) * pow(uv.y, 4.0);
 
         // horizon
         color = mix(color, horizonColor, pow(1.0 - pow(rd.y, 4.0), 20.0));
@@ -264,7 +258,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
 
     // special effects
     color += colorBubble;
-    color += GodRays(ray.d) * mix(skyColor.y, 1.0, ray.d.y * ray.d.y) * vec3(0.7, 1.0, 1.0);
+    color += GodRays(uv) * mix(skyColor.y, 1.0, uv.y * uv.y) * vec3(1.0, 1.0, 1.0);
 
     // gamma correction
     vec3 gamma = vec3(0.46, 0.46, 0.46);
@@ -281,12 +275,17 @@ float4 main(VS_Canvas input) : SV_Target
     eyeray.o = Eye.xyz;
 
 	// set ray direction in view space 
-    float dist2Imageplane = 5.0;
+    float dist2Imageplane = 1.0;
     float3 viewDir = float3(input.canvasXY, -dist2Imageplane);
     viewDir = normalize(viewDir);
     eyeray.d = viewDir;
 
+    // Transform viewDir using the inverse view matrix
+    float4x4 viewTrans = transpose(view);
+    eyeray.d = viewDir.x * viewTrans._11_12_13 + viewDir.y * viewTrans._21_22_23
+        + viewDir.z * viewTrans._31_32_33;
+
     float4 finalColor;
-    finalColor = render(eyeray, finalColor, input.Position.xy);
+    finalColor = render(eyeray, finalColor, input.Position.xy, input.canvasXY);
     return finalColor;
 }

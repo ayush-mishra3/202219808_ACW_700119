@@ -4,7 +4,7 @@
 #include "..\Common\StepTimer.h"
 #include "ShaderStructures.h"
 
-namespace _202219808_ACW_700119_D3D11_UWP_APP
+namespace _202219808_D3D11_APP
 {
 	class ImplicitModelRenderer
 	{
@@ -28,13 +28,21 @@ namespace _202219808_ACW_700119_D3D11_UWP_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_indexBuffer;
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_pixelShader;
+
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_constantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_cameraBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_resolutionBuffer;
+
+		ModelViewProjectionConstantBuffer				m_constantBufferData;
+		TotalTimeConstantBuffer							m_timeBufferData;
+		CameraPositionConstantBuffer					m_cameraBufferData;
+		ResolutionConstantBuffer					    m_resolutionBufferData;
 
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;
 
 		// System resources for cube geometry.
-		ModelViewProjectionConstantBuffer				m_constantBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.

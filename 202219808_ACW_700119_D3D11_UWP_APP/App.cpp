@@ -3,7 +3,7 @@
 
 #include <ppltasks.h>
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 
 using namespace concurrency;
 using namespace Windows::ApplicationModel;
@@ -85,7 +85,7 @@ void App::Load(Platform::String^ entryPoint)
 {
 	if (m_main == nullptr)
 	{
-		m_main = std::unique_ptr<_202219808_ACW_700119_D3D11_UWP_APPMain>(new _202219808_ACW_700119_D3D11_UWP_APPMain(m_deviceResources));
+		m_main = std::unique_ptr<_202219808_D3D11_APPMain>(new _202219808_D3D11_APPMain(m_deviceResources));
 	}
 }
 

@@ -4,8 +4,11 @@
 #include "ShaderStructures.h"
 #include "..\Common\StepTimer.h"
 
-namespace _202219808_ACW_700119_D3D11_UWP_APP
+namespace _202219808_D3D11_APP
 {
+	using namespace Windows::System;
+	using namespace Windows::UI::Core;
+
 	// This sample renderer instantiates a basic rendering pipeline.
 	class Sample3DSceneRenderer
 	{
@@ -16,14 +19,6 @@ namespace _202219808_ACW_700119_D3D11_UWP_APP
 		void ReleaseDeviceDependentResources();
 		void Update(DX::StepTimer const& timer);
 		void Render(DX::StepTimer const& timer);
-		void StartTracking();
-		void TrackingUpdate(float positionX);
-		void StopTracking();
-		bool IsTracking() { return m_tracking; }
-
-
-	private:
-		void Rotate(float radians);
 
 	private:
 		// Cached pointer to device resources.
@@ -47,8 +42,6 @@ namespace _202219808_ACW_700119_D3D11_UWP_APP
 
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
-		float	m_degreesPerSecond;
-		bool	m_tracking;
 	};
 }
 

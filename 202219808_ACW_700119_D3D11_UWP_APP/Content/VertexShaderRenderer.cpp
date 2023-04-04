@@ -1,15 +1,15 @@
 #include "pch.h"
-#include "VSRenderer.h"
+#include "VertexShaderRenderer.h"
 
 #include "..\Common\DirectXHelper.h"
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
-VSRenderer::VSRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+VertexShaderRenderer::VertexShaderRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
@@ -19,7 +19,7 @@ VSRenderer::VSRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResourc
 }
 
 // Initializes view parameters when the window size changes.
-void VSRenderer::CreateWindowSizeDependentResources()
+void VertexShaderRenderer::CreateWindowSizeDependentResources()
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = outputSize.Width / outputSize.Height;
@@ -63,7 +63,7 @@ void VSRenderer::CreateWindowSizeDependentResources()
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
-void VSRenderer::CreateDeviceDependentResources()
+void VertexShaderRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
 	auto loadVSTask = DX::ReadDataAsync(L"VertexShader02.cso");
@@ -205,7 +205,7 @@ void VSRenderer::CreateDeviceDependentResources()
 		});
 }
 
-void VSRenderer::ReleaseDeviceDependentResources()
+void VertexShaderRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 	m_vertexShader.Reset();
@@ -217,27 +217,27 @@ void VSRenderer::ReleaseDeviceDependentResources()
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
-void VSRenderer::Update(DX::StepTimer const& timer)
+void VertexShaderRenderer::Update(DX::StepTimer const& timer)
 {
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.timer, time);
+	//XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
+	//XMStoreFloat4(&m_constantBufferData.timer, time);
 
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
+	//D3D11_VIEWPORT viewport;
+	//UINT numViewports = 1;
+	//context->RSGetViewports(&numViewports, &viewport);
 
-	int viewportWidth = (int)viewport.Width;
-	int viewportHeight = (int)viewport.Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	//int viewportWidth = (int)viewport.Width;
+	//int viewportHeight = (int)viewport.Height;
+	//XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
+	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
 
 }
 
 
 // Renders one frame using the vertex and pixel shaders.
-void VSRenderer::Render()
+void VertexShaderRenderer::Render()
 {
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)

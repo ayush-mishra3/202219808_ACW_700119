@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-namespace _202219808_ACW_700119_D3D11_UWP_APP
+namespace _202219808_D3D11_APP
 {
 	// Constant buffer used to send MVP matrices to the vertex shader.
 	struct ModelViewProjectionConstantBuffer
@@ -8,8 +8,25 @@ namespace _202219808_ACW_700119_D3D11_UWP_APP
 		DirectX::XMFLOAT4X4 model;
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
-		DirectX::XMFLOAT4   resolution;
-		DirectX::XMFLOAT4   timer;
+	};
+
+	struct CameraPositionConstantBuffer
+	{
+		DirectX::XMFLOAT3 position;
+		float padding;
+	};
+
+	struct TotalTimeConstantBuffer
+	{
+		float time;
+		DirectX::XMFLOAT3 padding;
+	};
+
+	struct ResolutionConstantBuffer
+	{
+		float height;
+		float width;
+		DirectX::XMFLOAT2 padding;
 	};
 
 	// Used to send per-vertex data to the vertex shader.

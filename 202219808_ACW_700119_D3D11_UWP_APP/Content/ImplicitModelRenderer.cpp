@@ -3,7 +3,7 @@
 
 #include "..\Common\DirectXHelper.h"
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
@@ -116,6 +116,33 @@ void ImplicitModelRenderer::CreateDeviceDependentResources()
 			&m_constantBuffer
 		)
 	);
+
+	CD3D11_BUFFER_DESC cameraBufferDesc(sizeof(CameraPositionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&cameraBufferDesc,
+			nullptr,
+			&m_cameraBuffer
+		)
+	);
+
+	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(TotalTimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&timeBufferDesc,
+			nullptr,
+			&m_timeBuffer
+		)
+	);
+
+	CD3D11_BUFFER_DESC resolutionBufferDesc(sizeof(ResolutionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&resolutionBufferDesc,
+			nullptr,
+			&m_resolutionBuffer
+		)
+	);
 		});
 
 	// Once both shaders are loaded, create the mesh.
@@ -203,6 +230,9 @@ void ImplicitModelRenderer::ReleaseDeviceDependentResources()
 	m_inputLayout.Reset();
 	m_pixelShader.Reset();
 	m_constantBuffer.Reset();
+	m_cameraBuffer.Reset();
+	m_timeBuffer.Reset();
+	m_resolutionBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
@@ -212,18 +242,17 @@ void ImplicitModelRenderer::Update(DX::StepTimer const& timer)
 {
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.timer, time);
-
+	m_timeBufferData.time = timer.GetTotalSeconds();
 	D3D11_VIEWPORT viewport;
 	UINT numViewports = 1;
 	context->RSGetViewports(&numViewports, &viewport);
 
 	int viewportWidth = (int)viewport.Width;
 	int viewportHeight = (int)viewport.Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	m_resolutionBufferData.height = viewportHeight;
+	m_resolutionBufferData.width = viewportWidth;
 
+	DirectX::XMStoreFloat4x4(&m_constantBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -247,6 +276,37 @@ void ImplicitModelRenderer::Render()
 		0,
 		0
 	);
+
+	context->UpdateSubresource1(
+		m_cameraBuffer.Get(),
+		0,
+		NULL,
+		&m_cameraBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_timeBuffer.Get(),
+		0,
+		NULL,
+		&m_timeBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_resolutionBuffer.Get(),
+		0,
+		NULL,
+		&m_resolutionBufferData,
+		0,
+		0,
+		0
+	);
+	
 
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionColor);
@@ -297,6 +357,12 @@ void ImplicitModelRenderer::Render()
 		0
 	);
 
+	context->GSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
 	// Rasterization
 	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
 
@@ -321,6 +387,30 @@ void ImplicitModelRenderer::Render()
 		0,
 		1,
 		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_cameraBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_timeBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetConstantBuffers1(
+		3,
+		1,
+		m_resolutionBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
 	);

@@ -2,9 +2,9 @@
 
 #include "pch.h"
 #include "Common\DeviceResources.h"
-#include "_202219808_ACW_700119_D3D11_UWP_APPMain.h"
+#include "_202219808_D3D11_APPMain.h"
 
-namespace _202219808_ACW_700119_D3D11_UWP_APP
+namespace _202219808_D3D11_APP
 {
 	// Main entry point for our app. Connects the app with the Windows shell and handles application lifecycle events.
 	ref class App sealed : public Windows::ApplicationModel::Core::IFrameworkView
@@ -37,7 +37,7 @@ namespace _202219808_ACW_700119_D3D11_UWP_APP
 
 	private:
 		std::shared_ptr<DX::DeviceResources> m_deviceResources;
-		std::unique_ptr<_202219808_ACW_700119_D3D11_UWP_APPMain> m_main;
+		std::unique_ptr<_202219808_D3D11_APPMain> m_main;
 		bool m_windowClosed;
 		bool m_windowVisible;
 	};

@@ -3,7 +3,7 @@
 
 #include "..\Common\DirectXHelper.h"
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
@@ -249,17 +249,17 @@ void TessellationRenderer::Update(DX::StepTimer const& timer)
 {
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.timer, time);
+	//XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
+	//XMStoreFloat4(&m_constantBufferData.timer, time);
 
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
+	//D3D11_VIEWPORT viewport;
+	//UINT numViewports = 1;
+	//context->RSGetViewports(&numViewports, &viewport);
 
-	int viewportWidth = (int)viewport.Width;
-	int viewportHeight = (int)viewport.Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
+	//int viewportWidth = (int)viewport.Width;
+	//int viewportHeight = (int)viewport.Height;
+	//XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
+	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
 
 }
 

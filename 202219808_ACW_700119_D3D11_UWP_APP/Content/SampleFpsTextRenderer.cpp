@@ -3,7 +3,7 @@
 
 #include "Common/DirectXHelper.h"
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 using namespace Microsoft::WRL;
 
 // Initializes D2D resources used for text rendering.
@@ -44,12 +44,13 @@ SampleFpsTextRenderer::SampleFpsTextRenderer(const std::shared_ptr<DX::DeviceRes
 }
 
 // Updates the text to be displayed.
-void SampleFpsTextRenderer::Update(DX::StepTimer const& timer)
+void SampleFpsTextRenderer::Update(DX::StepTimer const& timer, float tessFactor)
 {
 	// Update display text.
 	uint32 fps = timer.GetFramesPerSecond();
 
-	m_text = (fps > 0) ? std::to_wstring(fps) + L" FPS" : L" - FPS";
+	m_text = (fps > 0) ? std::to_wstring(fps) + L" FPS" +
+		L"\n Tess factor: " + std::to_wstring(tessFactor) : L" - FPS" ;
 
 	ComPtr<IDWriteTextLayout> textLayout;
 	DX::ThrowIfFailed(
@@ -57,8 +58,8 @@ void SampleFpsTextRenderer::Update(DX::StepTimer const& timer)
 			m_text.c_str(),
 			(uint32) m_text.length(),
 			m_textFormat.Get(),
-			240.0f, // Max width of the input text.
-			50.0f, // Max height of the input text.
+			350.0f, // Max width of the input text.
+			80.0f, // Max height of the input text.
 			&textLayout
 			)
 		);

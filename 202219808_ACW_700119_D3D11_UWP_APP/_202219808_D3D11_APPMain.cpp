@@ -1,26 +1,25 @@
 ﻿#include "pch.h"
-#include "_202219808_ACW_700119_D3D11_UWP_APPMain.h"
+#include "_202219808_D3D11_APPMain.h"
 #include "Common\DirectXHelper.h"
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 using namespace Windows::Foundation;
 using namespace Windows::System::Threading;
 using namespace Concurrency;
 
 // Loads and initializes application assets when the application is loaded.
-_202219808_ACW_700119_D3D11_UWP_APPMain::_202219808_ACW_700119_D3D11_UWP_APPMain(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
-	m_deviceResources(deviceResources)
+_202219808_D3D11_APPMain::_202219808_D3D11_APPMain(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+	m_deviceResources(deviceResources),
+	m_tessFactor(31.0f)
 {
 	// Register to be notified if the Device is lost or recreated
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
 	m_implicitModelRenderer = std::unique_ptr<ImplicitModelRenderer>(new ImplicitModelRenderer(m_deviceResources));
-	m_vertexShaderRenderer = std::unique_ptr<VSRenderer>(new VSRenderer(m_deviceResources));
-	m_tessellationShaderRenderer = std::unique_ptr<TessellationRenderer>(new TessellationRenderer(m_deviceResources));
-
+	//m_vertexShaderRenderer = std::unique_ptr<VertexShaderRenderer>(new VertexShaderRenderer(m_deviceResources));
+	//m_tessellationShaderRenderer = std::unique_ptr<TessellationRenderer>(new TessellationRenderer(m_deviceResources));
 	m_fpsTextRenderer = std::unique_ptr<SampleFpsTextRenderer>(new SampleFpsTextRenderer(m_deviceResources));
-
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
 	// e.g. for 60 FPS fixed timestep update logic, call:
 	/*
@@ -29,38 +28,40 @@ _202219808_ACW_700119_D3D11_UWP_APPMain::_202219808_ACW_700119_D3D11_UWP_APPMain
 	*/
 }
 
-_202219808_ACW_700119_D3D11_UWP_APPMain::~_202219808_ACW_700119_D3D11_UWP_APPMain()
+_202219808_D3D11_APPMain::~_202219808_D3D11_APPMain()
 {
 	// Deregister device notification
 	m_deviceResources->RegisterDeviceNotify(nullptr);
 }
 
 // Updates application state when the window size changes (e.g. device orientation change)
-void _202219808_ACW_700119_D3D11_UWP_APPMain::CreateWindowSizeDependentResources() 
+void _202219808_D3D11_APPMain::CreateWindowSizeDependentResources()
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
 	m_implicitModelRenderer->CreateWindowSizeDependentResources();
-	m_vertexShaderRenderer->CreateWindowSizeDependentResources();
-	m_tessellationShaderRenderer->CreateWindowSizeDependentResources();
+	//m_vertexShaderRenderer->CreateWindowSizeDependentResources();
+	//m_tessellationShaderRenderer->CreateWindowSizeDependentResources();
 }
 
 // Updates the application state once per frame.
-void _202219808_ACW_700119_D3D11_UWP_APPMain::Update() 
+void _202219808_D3D11_APPMain::Update()
 {
+	CheckInput(m_timer);
 	// Update scene objects.
 	m_timer.Tick([&]()
-	{
-		// TODO: Replace this with your app's content update functions.
-		m_implicitModelRenderer->Update(m_timer);
-		m_vertexShaderRenderer->Update(m_timer);
-		m_tessellationShaderRenderer->Update(m_timer);
-		m_fpsTextRenderer->Update(m_timer);
-	});
+		{
+			// TODO: Replace this with your app's content update functions.
+
+			m_implicitModelRenderer->Update(m_timer);
+			//m_vertexShaderRenderer->Update(m_timer);
+			//m_tessellationShaderRenderer->Update(m_timer);
+			m_fpsTextRenderer->Update(m_timer, m_tessFactor);
+		});
 }
 
 // Renders the current frame according to the current application state.
 // Returns true if the frame was rendered and is ready to be displayed.
-bool _202219808_ACW_700119_D3D11_UWP_APPMain::Render() 
+bool _202219808_D3D11_APPMain::Render()
 {
 	// Don't try to render anything before the first Update.
 	if (m_timer.GetFrameCount() == 0)
@@ -75,7 +76,7 @@ bool _202219808_ACW_700119_D3D11_UWP_APPMain::Render()
 	context->RSSetViewports(1, &viewport);
 
 	// Reset render targets to the screen.
-	ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
+	ID3D11RenderTargetView* const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
 	context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
 
 	// Clear the back buffer and depth stencil view.
@@ -85,28 +86,55 @@ bool _202219808_ACW_700119_D3D11_UWP_APPMain::Render()
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
 	m_implicitModelRenderer->Render();
-	m_vertexShaderRenderer->Render();
-	m_tessellationShaderRenderer->Render();
+	//m_vertexShaderRenderer->Render();
+	//m_tessellationShaderRenderer->Render();
 	m_fpsTextRenderer->Render();
+
+
 
 	return true;
 }
 
 // Notifies renderers that device resources need to be released.
-void _202219808_ACW_700119_D3D11_UWP_APPMain::OnDeviceLost()
+void _202219808_D3D11_APPMain::OnDeviceLost()
 {
 	m_implicitModelRenderer->ReleaseDeviceDependentResources();
-	m_vertexShaderRenderer->ReleaseDeviceDependentResources();
-	m_tessellationShaderRenderer->ReleaseDeviceDependentResources();
+	//m_vertexShaderRenderer->ReleaseDeviceDependentResources();
+	//m_tessellationShaderRenderer->ReleaseDeviceDependentResources();
 	m_fpsTextRenderer->ReleaseDeviceDependentResources();
 }
 
 // Notifies renderers that device resources may now be recreated.
-void _202219808_ACW_700119_D3D11_UWP_APPMain::OnDeviceRestored()
+void _202219808_D3D11_APPMain::OnDeviceRestored()
 {
 	m_implicitModelRenderer->CreateDeviceDependentResources();
-	m_vertexShaderRenderer->CreateDeviceDependentResources();
-	m_tessellationShaderRenderer->CreateDeviceDependentResources();
+	//m_vertexShaderRenderer->CreateDeviceDependentResources();
+	//m_tessellationShaderRenderer->CreateDeviceDependentResources();
 	m_fpsTextRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
+}
+
+void _202219808_D3D11_APPMain::CheckInput(DX::StepTimer const& timer)
+{
+
+	if (CheckKeyPressed(static_cast<VirtualKey>(0x45)))
+	{
+		if (m_tessFactor > 1.0f)
+		{
+			m_tessFactor -= 1.0f;
+		}
+	}
+
+	if (CheckKeyPressed(static_cast<VirtualKey>(0x51)))
+	{
+		if (m_tessFactor < 64.0f)
+		{
+			m_tessFactor += 1.0f;
+		}
+	}
+}
+
+bool _202219808_D3D11_APPMain::CheckKeyPressed(VirtualKey key)
+{
+	return (CoreWindow::GetForCurrentThread()->GetKeyState(key) & CoreVirtualKeyStates::Down) == CoreVirtualKeyStates::Down;
 }

@@ -4,7 +4,7 @@
 #include "..\Common\DeviceResources.h"
 #include "..\Common\StepTimer.h"
 
-namespace _202219808_ACW_700119_D3D11_UWP_APP
+namespace _202219808_D3D11_APP
 {
 	// Renders the current FPS value in the bottom right corner of the screen using Direct2D and DirectWrite.
 	class SampleFpsTextRenderer
@@ -13,7 +13,7 @@ namespace _202219808_ACW_700119_D3D11_UWP_APP
 		SampleFpsTextRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 		void CreateDeviceDependentResources();
 		void ReleaseDeviceDependentResources();
-		void Update(DX::StepTimer const& timer);
+		void Update(DX::StepTimer const& timer, float tessFactor);
 		void Render();
 
 	private:

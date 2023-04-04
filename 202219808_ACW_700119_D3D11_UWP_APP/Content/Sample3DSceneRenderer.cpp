@@ -3,7 +3,7 @@
 
 #include "..\Common\DirectXHelper.h"
 
-using namespace _202219808_ACW_700119_D3D11_UWP_APP;
+using namespace _202219808_D3D11_APP;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
@@ -11,9 +11,7 @@ using namespace Windows::Foundation;
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
-	m_degreesPerSecond(45),
 	m_indexCount(0),
-	m_tracking(false),
 	m_deviceResources(deviceResources)
 {
 	CreateDeviceDependentResources();
@@ -68,42 +66,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 {
-	if (!m_tracking)
-	{
-		// Convert degrees to radians, then convert seconds to rotation angle
-		float radiansPerSecond = XMConvertToRadians(m_degreesPerSecond);
-		double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
-		float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
-
-		Rotate(radians);
-	}
-}
-
-// Rotate the 3D cube model a set amount of radians.
-void Sample3DSceneRenderer::Rotate(float radians)
-{
-	// Prepare to pass the updated model matrix to the shader
-	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
-}
-
-void Sample3DSceneRenderer::StartTracking()
-{
-	m_tracking = true;
-}
-
-// When tracking, the 3D cube can be rotated around its Y axis by tracking pointer position relative to the output screen width.
-void Sample3DSceneRenderer::TrackingUpdate(float positionX)
-{
-	if (m_tracking)
-	{
-		float radians = XM_2PI * 2.0f * positionX / m_deviceResources->GetOutputSize().Width;
-		Rotate(radians);
-	}
-}
-
-void Sample3DSceneRenderer::StopTracking()
-{
-	m_tracking = false;
+	
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -114,19 +77,9 @@ void Sample3DSceneRenderer::Render(DX::StepTimer const& timer)
 	{
 		return;
 	}
-	XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.timer, time);
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
-
-	int viewportWidth = (int)viewport.Width;
-	int viewportHeight = (int)viewport.Height;
-	XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
