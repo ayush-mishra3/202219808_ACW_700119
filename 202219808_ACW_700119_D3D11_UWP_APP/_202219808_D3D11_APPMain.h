@@ -2,11 +2,15 @@
 
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
-#include "Content\FpsTextRenderer.h"
 #include "Content\UnderwaterRenderer.h"
+#include "Content\BubbleRenderer.h"
 #include "Content\PlantRenderer.h"
-#include "Content\TessellationRenderer.h"
-#include "Content\VertexShaderRenderer.h"
+#include "Content\PSCoralRenderer.h"
+#include "Content\VSCoralRenderer.h"
+#include "Content\TSCoralRenderer.h"
+// #include "Content\GSCoralRenderer.h"
+// #include "Content\FishRenderer.h"
+#include "Content\FpsTextRenderer.h"
 
 // Renders Direct2D and 3D content on the screen.
 namespace _202219808_D3D11_APP
@@ -31,7 +35,6 @@ namespace _202219808_D3D11_APP
 		void CheckInput(DX::StepTimer const& timer);
 		bool CheckKeyPressed(VirtualKey key);
 		
-
 	private:
 		// Cached pointer to device resources.
 		std::shared_ptr<DX::DeviceResources>   m_deviceResources;
@@ -39,10 +42,17 @@ namespace _202219808_D3D11_APP
 		// TODO: Replace with your own content renderers.
 		std::unique_ptr<FpsTextRenderer>	   m_fpsTextRenderer;
 		
+		// Implicit geometry
 		std::unique_ptr<UnderwaterRenderer>    m_underwaterRenderer;
+		std::unique_ptr<BubbleRenderer>		   m_bubbleRenderer;
 		std::unique_ptr<PlantRenderer>		   m_plantRenderer;
-		std::unique_ptr<VertexShaderRenderer>  m_vertexShaderRenderer;
-		std::unique_ptr<TessellationRenderer>  m_tessellationShaderRenderer;
+		std::unique_ptr<PSCoralRenderer>	   m_psCoralRenderer;
+
+		// Explicit geometry
+		std::unique_ptr<VSCoralRenderer>	   m_vsCoralRenderer;
+		std::unique_ptr<TSCoralRenderer>	   m_tsCoralRenderer;
+		//std::unique_ptr<GSCoralRenderer>	   m_gsCoralRenderer;
+		//std::unique_ptr<FishRenderer>		   m_fishRenderer;
 
 		// Rendering loop timer.
 		DX::StepTimer m_timer;

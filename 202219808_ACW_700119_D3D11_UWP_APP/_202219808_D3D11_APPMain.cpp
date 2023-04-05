@@ -16,11 +16,17 @@ _202219808_D3D11_APPMain::_202219808_D3D11_APPMain(const std::shared_ptr<DX::Dev
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
-	m_underwaterRenderer = std::unique_ptr<UnderwaterRenderer>(new UnderwaterRenderer(m_deviceResources));
-	m_plantRenderer = std::unique_ptr<PlantRenderer>(new PlantRenderer(m_deviceResources));
-	//m_vertexShaderRenderer = std::unique_ptr<VertexShaderRenderer>(new VertexShaderRenderer(m_deviceResources));
-	//m_tessellationShaderRenderer = std::unique_ptr<TessellationRenderer>(new TessellationRenderer(m_deviceResources));
-	m_fpsTextRenderer = std::unique_ptr<FpsTextRenderer>(new FpsTextRenderer(m_deviceResources));
+	m_underwaterRenderer	= std::unique_ptr<UnderwaterRenderer>(new UnderwaterRenderer(m_deviceResources));
+	m_bubbleRenderer		= std::unique_ptr<BubbleRenderer>(new BubbleRenderer(m_deviceResources));
+	m_plantRenderer			= std::unique_ptr<PlantRenderer>(new PlantRenderer(m_deviceResources));
+	m_psCoralRenderer		= std::unique_ptr<PSCoralRenderer>(new PSCoralRenderer(m_deviceResources));
+	m_vsCoralRenderer		= std::unique_ptr<VSCoralRenderer>(new VSCoralRenderer(m_deviceResources));
+	m_tsCoralRenderer		= std::unique_ptr<TSCoralRenderer>(new TSCoralRenderer(m_deviceResources));
+	// m_gsCoralRenderer	= std::unique_ptr<GSCoralRenderer>(new GSCoralRenderer(m_deviceResources));
+	// m_fishRenderer		= std::unique_ptr<FishRenderer>(new FishRenderer(m_deviceResources));
+	
+	m_fpsTextRenderer		= std::unique_ptr<FpsTextRenderer>(new FpsTextRenderer(m_deviceResources));
+	
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
 	// e.g. for 60 FPS fixed timestep update logic, call:
 	/*
@@ -40,9 +46,13 @@ void _202219808_D3D11_APPMain::CreateWindowSizeDependentResources()
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
 	m_underwaterRenderer->CreateWindowSizeDependentResources();
+	m_bubbleRenderer->CreateWindowSizeDependentResources();
 	m_plantRenderer->CreateWindowSizeDependentResources();
-	//m_vertexShaderRenderer->CreateWindowSizeDependentResources();
-	//m_tessellationShaderRenderer->CreateWindowSizeDependentResources();
+	m_psCoralRenderer->CreateWindowSizeDependentResources();
+	m_vsCoralRenderer->CreateWindowSizeDependentResources();
+	m_tsCoralRenderer->CreateWindowSizeDependentResources();
+	// m_gsCoralRenderer->CreateWindowSizeDependentResources();
+	// m_fishRenderer->CreateWindowSizeDependentResources();
 }
 
 // Updates the application state once per frame.
@@ -53,11 +63,14 @@ void _202219808_D3D11_APPMain::Update()
 	m_timer.Tick([&]()
 		{
 			// TODO: Replace this with your app's content update functions.
-
 			m_underwaterRenderer->Update(m_timer);
+			m_bubbleRenderer->Update(m_timer);
 			m_plantRenderer->Update(m_timer);
-			//m_vertexShaderRenderer->Update(m_timer);
-			//m_tessellationShaderRenderer->Update(m_timer);
+			m_psCoralRenderer->Update(m_timer);
+			m_vsCoralRenderer->Update(m_timer);
+			m_tsCoralRenderer->Update(m_timer);
+			//m_gsCoralRenderer->Update(m_timer);
+			//m_fishRenderer->Update(m_timer);
 			m_fpsTextRenderer->Update(m_timer, m_tessFactor);
 		});
 }
@@ -89,12 +102,14 @@ bool _202219808_D3D11_APPMain::Render()
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
 	m_underwaterRenderer->Render();
+	m_bubbleRenderer->Render();
 	m_plantRenderer->Render();
-	//m_vertexShaderRenderer->Render();
-	//m_tessellationShaderRenderer->Render();
+	m_psCoralRenderer->Render();
+	m_vsCoralRenderer->Render();
+	m_tsCoralRenderer->Render();
+	// m_gsCoralRenderer->Render();
+	// m_fishRenderer->Render();
 	m_fpsTextRenderer->Render();
-
-
 
 	return true;
 }
@@ -103,9 +118,13 @@ bool _202219808_D3D11_APPMain::Render()
 void _202219808_D3D11_APPMain::OnDeviceLost()
 {
 	m_underwaterRenderer->ReleaseDeviceDependentResources();
+	m_bubbleRenderer->ReleaseDeviceDependentResources();
 	m_plantRenderer->ReleaseDeviceDependentResources();
-	//m_vertexShaderRenderer->ReleaseDeviceDependentResources();
-	//m_tessellationShaderRenderer->ReleaseDeviceDependentResources();
+	m_psCoralRenderer->ReleaseDeviceDependentResources();
+	m_vsCoralRenderer->ReleaseDeviceDependentResources();
+	m_tsCoralRenderer->ReleaseDeviceDependentResources();
+	// m_gsCoralRenderer->ReleaseDeviceDependentResources();
+	// m_fishRenderer->ReleaseDeviceDependentResources();
 	m_fpsTextRenderer->ReleaseDeviceDependentResources();
 }
 
@@ -113,9 +132,13 @@ void _202219808_D3D11_APPMain::OnDeviceLost()
 void _202219808_D3D11_APPMain::OnDeviceRestored()
 {
 	m_underwaterRenderer->CreateDeviceDependentResources();
+	m_bubbleRenderer->CreateDeviceDependentResources();
 	m_plantRenderer->CreateDeviceDependentResources();
-	//m_vertexShaderRenderer->CreateDeviceDependentResources();
-	//m_tessellationShaderRenderer->CreateDeviceDependentResources();
+	m_psCoralRenderer->CreateDeviceDependentResources();
+	m_vsCoralRenderer->CreateDeviceDependentResources();
+	m_tsCoralRenderer->CreateDeviceDependentResources();
+	// m_gsCoralRenderer->CreateDeviceDependentResources();
+	// m_fishRenderer->CreateDeviceDependentResources();
 	m_fpsTextRenderer->CreateDeviceDependentResources();
 	CreateWindowSizeDependentResources();
 }
@@ -125,18 +148,12 @@ void _202219808_D3D11_APPMain::CheckInput(DX::StepTimer const& timer)
 
 	if (CheckKeyPressed(static_cast<VirtualKey>(0x45)))
 	{
-		if (m_tessFactor > 1.0f)
-		{
-			m_tessFactor -= 1.0f;
-		}
+		if (m_tessFactor > 1.0f) m_tessFactor -= 1.0f;
 	}
 
 	if (CheckKeyPressed(static_cast<VirtualKey>(0x51)))
 	{
-		if (m_tessFactor < 64.0f)
-		{
-			m_tessFactor += 1.0f;
-		}
+		if (m_tessFactor < 64.0f) m_tessFactor += 1.0f;
 	}
 }
 

@@ -1,12 +1,31 @@
-struct VS_OUTPUT
+cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
-    float4 pos : SV_POSITION;
+    matrix model;
+    matrix view;
+    matrix projection;
 };
 
-VS_OUTPUT main()
+struct VS_Canvas
 {
-    VS_OUTPUT output = (VS_OUTPUT) 0;
+    float4 Position : SV_POSITION;
+    float2 canvasXY : TEXCOORD0;
+};
+
+
+VS_Canvas main(float3 vPos : POSITION)
+{
+    VS_Canvas Output;
+    vPos.xyz *= 15.0;
+    vPos.z -= 10.0;
+    vPos.x -= 5.0;
+    vPos.y -= 0.0;
+  
+    Output.Position = float4(vPos, 1.0);
+    Output.Position = mul(Output.Position, view);
+    Output.Position = mul(Output.Position, projection);
     
-    output.pos = float4(0.0, 0.0, 0.0, 1.0);
-	return output;
+    float AspectRatio = projection._m11 / projection._m00;
+    Output.canvasXY = sign(vPos.xy) * float2(AspectRatio, 1.4);
+
+    return Output;
 }

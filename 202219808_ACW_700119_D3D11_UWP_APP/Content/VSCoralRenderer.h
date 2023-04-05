@@ -6,10 +6,10 @@
 
 namespace _202219808_D3D11_APP 
 {
-	class VertexShaderRenderer
+	class VSCoralRenderer
 	{
 	public:
-		VertexShaderRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		VSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
@@ -29,14 +29,15 @@ namespace _202219808_D3D11_APP
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_vertexShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_pixelShader;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_constantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
 
+		ModelViewProjectionConstantBuffer				m_constantBufferData;
+		TimeConstantBuffer								m_timeBufferData;
 
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;
 
-
 		// System resources for cube geometry.
-		ModelViewProjectionConstantBuffer				m_constantBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.

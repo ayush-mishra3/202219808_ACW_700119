@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "PlantRenderer.h"
+#include "PSCoralRenderer.h"
 
 #include "..\Common\DirectXHelper.h"
 
@@ -9,7 +9,7 @@ using namespace DirectX;
 using namespace Windows::Foundation;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
-PlantRenderer::PlantRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+PSCoralRenderer::PSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
@@ -19,7 +19,7 @@ PlantRenderer::PlantRenderer(const std::shared_ptr<DX::DeviceResources>& deviceR
 }
 
 // Initializes view parameters when the window size changes.
-void PlantRenderer::CreateWindowSizeDependentResources()
+void PSCoralRenderer::CreateWindowSizeDependentResources()
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = outputSize.Width / outputSize.Height;
@@ -63,11 +63,11 @@ void PlantRenderer::CreateWindowSizeDependentResources()
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
-void PlantRenderer::CreateDeviceDependentResources()
+void PSCoralRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-	auto loadVSTask = DX::ReadDataAsync(L"VertexShader03.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"PixelShader03.cso");
+	auto loadVSTask = DX::ReadDataAsync(L"VertexShader04.cso");
+	auto loadPSTask = DX::ReadDataAsync(L"PixelShader04.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) {
@@ -205,7 +205,7 @@ void PlantRenderer::CreateDeviceDependentResources()
 		});
 }
 
-void PlantRenderer::ReleaseDeviceDependentResources()
+void PSCoralRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 	m_vertexShader.Reset();
@@ -218,7 +218,7 @@ void PlantRenderer::ReleaseDeviceDependentResources()
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
-void PlantRenderer::Update(DX::StepTimer const& timer)
+void PSCoralRenderer::Update(DX::StepTimer const& timer)
 {
 	m_timeBufferData.time = timer.GetTotalSeconds();
 
@@ -226,7 +226,7 @@ void PlantRenderer::Update(DX::StepTimer const& timer)
 }
 
 // Renders one frame using the vertex and pixel shaders.
-void PlantRenderer::Render()
+void PSCoralRenderer::Render()
 {
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)

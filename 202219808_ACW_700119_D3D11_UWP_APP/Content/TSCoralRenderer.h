@@ -6,10 +6,10 @@
 
 namespace _202219808_D3D11_APP
 {
-	class TessellationRenderer
+	class TSCoralRenderer
 	{
 	public:
-		class TessellationRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		class TSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
@@ -31,12 +31,14 @@ namespace _202219808_D3D11_APP
 		Microsoft::WRL::ComPtr<ID3D11DomainShader>		m_domainShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_pixelShader;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_constantBuffer;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
 		
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;
 
 		// System resources for cube geometry.
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
+		TimeConstantBuffer								m_timeBufferData;
 		uint32											m_indexCount;
 
 		// Variables used with the rendering loop.

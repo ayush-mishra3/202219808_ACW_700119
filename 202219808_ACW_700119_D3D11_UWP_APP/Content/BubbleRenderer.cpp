@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "TessellationRenderer.h"
+#include "BubbleRenderer.h"
 
 #include "..\Common\DirectXHelper.h"
 
@@ -9,7 +9,7 @@ using namespace DirectX;
 using namespace Windows::Foundation;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
-TessellationRenderer::TessellationRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+BubbleRenderer::BubbleRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
@@ -19,7 +19,7 @@ TessellationRenderer::TessellationRenderer(const std::shared_ptr<DX::DeviceResou
 }
 
 // Initializes view parameters when the window size changes.
-void TessellationRenderer::CreateWindowSizeDependentResources()
+void BubbleRenderer::CreateWindowSizeDependentResources()
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = outputSize.Width / outputSize.Height;
@@ -56,20 +56,18 @@ void TessellationRenderer::CreateWindowSizeDependentResources()
 	);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 0.0f, 5.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 4.0f, 10.5f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, 4.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
-void TessellationRenderer::CreateDeviceDependentResources()
+void BubbleRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-	auto loadVSTask = DX::ReadDataAsync(L"VertexShader03.cso");
-	auto loadHSTask = DX::ReadDataAsync(L"HullShader03.cso");
-	auto loadDSTask = DX::ReadDataAsync(L"DomainShader03.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"PixelShader03.cso");
+	auto loadVSTask = DX::ReadDataAsync(L"VertexShader02.cso");
+	auto loadPSTask = DX::ReadDataAsync(L"PixelShader02.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) {
@@ -99,39 +97,6 @@ void TessellationRenderer::CreateDeviceDependentResources()
 	);
 		});
 
-	// After the hull shader file is loaded, create the shader and constant buffer.
-	auto createHSTask = loadHSTask.then([this](const std::vector<byte>& fileData) {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateHullShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_hullShader
-			)
-		);
-		});
-
-	// After the domain shader file is loaded, create the shader and constant buffer.
-	auto createDSTask = loadDSTask.then([this](const std::vector<byte>& fileData) {
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateDomainShader(
-				&fileData[0],
-				fileData.size(),
-				nullptr,
-				&m_domainShader
-			)
-		);
-
-	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&constantBufferDesc,
-			nullptr,
-			&m_constantBuffer
-		)
-	);
-		});
-
 	// After the pixel shader file is loaded, create the shader and constant buffer.
 	auto createPSTask = loadPSTask.then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
@@ -151,77 +116,86 @@ void TessellationRenderer::CreateDeviceDependentResources()
 			&m_constantBuffer
 		)
 	);
+
+	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(TimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&timeBufferDesc,
+			nullptr,
+			&m_timeBuffer
+		)
+	);
 		});
 
 	// Once both shaders are loaded, create the mesh.
-	auto createCubeTask = (createPSTask && createDSTask && createHSTask && createVSTask).then([this]() {
+	auto createCubeTask = (createPSTask && createVSTask).then([this]() {
 
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor cubeVertices[] =
 		{
-		{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-		{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-		{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-		{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-		{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-		{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-		{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-		{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
-	};
-
-		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		vertexBufferData.pSysMem = cubeVertices;
-		vertexBufferData.SysMemPitch = 0;
-		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&vertexBufferDesc,
-				&vertexBufferData,
-				&m_vertexBuffer
-			)
-		);
-
-		// Load mesh indices. Each trio of indices represents
-		// a triangle to be rendered on the screen.
-		// For example: 0,2,1 means that the vertices with indexes
-		// 0, 2 and 1 from the vertex buffer compose the 
-		// first triangle of this mesh.
-		static const unsigned short cubeIndices[] =
-		{
-		0,2,1, // -x
-		1,2,3,
-
-		4,5,6, // +x
-		5,7,6,
-
-		0,1,5, // -y
-		0,5,4,
-
-		2,6,7, // +y
-		2,7,3,
-
-		0,4,6, // -z
-		0,6,2,
-
-		1,3,7, // +z
-		1,7,5,
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
 		};
 
-		m_indexCount = ARRAYSIZE(cubeIndices);
+	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+	vertexBufferData.pSysMem = cubeVertices;
+	vertexBufferData.SysMemPitch = 0;
+	vertexBufferData.SysMemSlicePitch = 0;
+	CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&vertexBufferDesc,
+			&vertexBufferData,
+			&m_vertexBuffer
+		)
+	);
 
-		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		indexBufferData.pSysMem = cubeIndices;
-		indexBufferData.SysMemPitch = 0;
-		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&indexBufferDesc,
-				&indexBufferData,
-				&m_indexBuffer
-			)
-		);
+	// Load mesh indices. Each trio of indices represents
+// a triangle to be rendered on the screen.
+// For example: 0,2,1 means that the vertices with indexes
+// 0, 2 and 1 from the vertex buffer compose the 
+// first triangle of this mesh.
+	static const unsigned short cubeIndices[] =
+	{
+	0,2,1, // -x
+	1,2,3,
+
+	4,5,6, // +x
+	5,7,6,
+
+	0,1,5, // -y
+	0,5,4,
+
+	2,6,7, // +y
+	2,7,3,
+
+	0,4,6, // -z
+	0,6,2,
+
+	1,3,7, // +z
+	1,7,5,
+	};
+
+	m_indexCount = ARRAYSIZE(cubeIndices);
+
+	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+	indexBufferData.pSysMem = cubeIndices;
+	indexBufferData.SysMemPitch = 0;
+	indexBufferData.SysMemSlicePitch = 0;
+	CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&indexBufferDesc,
+			&indexBufferData,
+			&m_indexBuffer
+		)
+	);
 
 		});
 
@@ -231,40 +205,28 @@ void TessellationRenderer::CreateDeviceDependentResources()
 		});
 }
 
-void TessellationRenderer::ReleaseDeviceDependentResources()
+void BubbleRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 	m_vertexShader.Reset();
 	m_inputLayout.Reset();
-	m_hullShader.Reset();
-	m_domainShader.Reset();
 	m_pixelShader.Reset();
 	m_constantBuffer.Reset();
+	m_timeBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
-void TessellationRenderer::Update(DX::StepTimer const& timer)
+void BubbleRenderer::Update(DX::StepTimer const& timer)
 {
-	auto context = m_deviceResources->GetD3DDeviceContext();
+	m_timeBufferData.time = timer.GetTotalSeconds();
 
-	//XMVECTOR time = { static_cast<float>(timer.GetTotalSeconds()), 0.0f, 0.0f, 0.0f };
-	//XMStoreFloat4(&m_constantBufferData.timer, time);
-
-	//D3D11_VIEWPORT viewport;
-	//UINT numViewports = 1;
-	//context->RSGetViewports(&numViewports, &viewport);
-
-	//int viewportWidth = (int)viewport.Width;
-	//int viewportHeight = (int)viewport.Height;
-	//XMVECTOR screenSize = { viewportWidth, viewportHeight, 0.0f };
-	//XMStoreFloat4(&m_constantBufferData.resolution, screenSize);
-
+	DirectX::XMStoreFloat4x4(&m_constantBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 }
 
 // Renders one frame using the vertex and pixel shaders.
-void TessellationRenderer::Render()
+void BubbleRenderer::Render()
 {
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
@@ -285,6 +247,17 @@ void TessellationRenderer::Render()
 		0
 	);
 
+	context->UpdateSubresource1(
+		m_timeBuffer.Get(),
+		0,
+		NULL,
+		&m_timeBufferData,
+		0,
+		0,
+		0
+	);
+
+
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionColor);
 	UINT offset = 0;
@@ -302,7 +275,7 @@ void TessellationRenderer::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	context->IASetInputLayout(m_inputLayout.Get());
 
@@ -322,27 +295,22 @@ void TessellationRenderer::Render()
 		nullptr
 	);
 
-	// Attach our hull shader.
 	context->HSSetShader(
-		m_hullShader.Get(),
+		nullptr,
 		nullptr,
 		0
 	);
 
-	// Attach our domain shader.
 	context->DSSetShader(
-		m_domainShader.Get(),
+		nullptr,
 		nullptr,
 		0
 	);
 
-	// Send the constant buffer to the graphics device.
-	context->DSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
+	context->GSSetShader(
 		nullptr,
-		nullptr
+		nullptr,
+		0
 	);
 
 	// Rasterization
@@ -350,8 +318,8 @@ void TessellationRenderer::Render()
 
 	auto device = m_deviceResources->GetD3DDevice();
 
-	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
 
@@ -369,6 +337,13 @@ void TessellationRenderer::Render()
 		0,
 		1,
 		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_timeBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
 	);

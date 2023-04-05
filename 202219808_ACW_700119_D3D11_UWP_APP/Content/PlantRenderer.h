@@ -33,7 +33,7 @@ namespace _202219808_D3D11_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
 
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
-		TotalTimeConstantBuffer							m_timeBufferData;
+		TimeConstantBuffer								m_timeBufferData;
 
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;

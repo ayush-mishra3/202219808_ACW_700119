@@ -117,7 +117,7 @@ void UnderwaterRenderer::CreateDeviceDependentResources()
 		)
 	);
 
-	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(TotalTimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(TimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD3DDevice()->CreateBuffer(
 			&timeBufferDesc,

@@ -9,7 +9,7 @@ namespace _202219808_D3D11_APP
 		DirectX::XMFLOAT4X4 view;
 		DirectX::XMFLOAT4X4 projection;
 	};
-	struct TotalTimeConstantBuffer
+	struct TimeConstantBuffer
 	{
 		float time;
 		DirectX::XMFLOAT3 padding;

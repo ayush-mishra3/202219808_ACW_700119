@@ -6,15 +6,15 @@
 
 namespace _202219808_D3D11_APP
 {
-	class UnderwaterRenderer
+	class BubbleRenderer
 	{
 	public:
-		UnderwaterRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
-		
+		BubbleRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
-		
+
 		void Update(DX::StepTimer const& timer);
 		void Render();
 
@@ -33,7 +33,7 @@ namespace _202219808_D3D11_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
 
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
-		TimeConstantBuffer								m_timeBufferData;
+		TimeConstantBuffer							    m_timeBufferData;
 
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;

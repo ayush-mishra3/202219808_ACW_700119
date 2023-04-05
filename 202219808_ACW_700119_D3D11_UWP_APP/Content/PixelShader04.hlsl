@@ -178,14 +178,6 @@ vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 e
                                   light1Pos,
                                   light1Intensity);
     
-    vec3 light2Pos = vec3(2.0 * sin(0.37 * iTime),
-                          2.0 * cos(0.37 * iTime),
-                          2.0);
-    vec3 light2Intensity = vec3(0.4, 0.4, 0.4);
-    
-    color += phongContribForLight(k_d, k_s, alpha, p, eye,
-                                  light2Pos,
-                                  light2Intensity);
     return color;
 }
 
@@ -208,7 +200,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     vec3 p = eye + dist * dir;
     
     vec3 K_a = vec3(0.2, 0.2, 0.2);
-    vec3 K_d = vec3(0.7, 0.2, 0.2);
+    vec3 K_d = vec3(0.1, 0.1, 0.1);
     vec3 K_s = vec3(1.0, 1.0, 1.0);
     float shininess = 10.0;
     

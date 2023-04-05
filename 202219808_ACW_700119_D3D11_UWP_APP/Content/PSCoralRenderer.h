@@ -6,15 +6,15 @@
 
 namespace _202219808_D3D11_APP
 {
-	class UnderwaterRenderer
+	class PSCoralRenderer
 	{
 	public:
-		UnderwaterRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
-		
+		PSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
-		
+
 		void Update(DX::StepTimer const& timer);
 		void Render();
 

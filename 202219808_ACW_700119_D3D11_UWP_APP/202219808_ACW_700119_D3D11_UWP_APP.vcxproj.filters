@@ -47,45 +47,66 @@
     <Filter Include="Content\Shaders">
       <UniqueIdentifier>{12aac155-d673-4c9c-8070-0055c37a5c8f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Content\Implicit Modeling">
+      <UniqueIdentifier>{bf68d85c-c738-427a-92c3-dec0bfea5986}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Explicit Modeling">
+      <UniqueIdentifier>{3fd58650-f227-4acd-a640-607dfe57feb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Content\Gui">
+      <UniqueIdentifier>{12168b3d-91d2-4728-b0f4-08bcaa151ce8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="_202219808_D3D11_APPMain.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Content\UnderwaterRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
-    <ClCompile Include="Content\TessellationRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
-    <ClCompile Include="Content\VertexShaderRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
     <ClCompile Include="Content\FpsTextRenderer.cpp">
-      <Filter>Content</Filter>
+      <Filter>Content\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\BubbleRenderer.cpp">
+      <Filter>Content\Implicit Modeling</Filter>
     </ClCompile>
     <ClCompile Include="Content\PlantRenderer.cpp">
-      <Filter>Content</Filter>
+      <Filter>Content\Implicit Modeling</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\PSCoralRenderer.cpp">
+      <Filter>Content\Implicit Modeling</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\UnderwaterRenderer.cpp">
+      <Filter>Content\Implicit Modeling</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\TSCoralRenderer.cpp">
+      <Filter>Content\Explicit Modeling</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\VSCoralRenderer.cpp">
+      <Filter>Content\Explicit Modeling</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="_202219808_D3D11_APPMain.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Content\UnderwaterRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\TessellationRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\VertexShaderRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="Content\FpsTextRenderer.h">
-      <Filter>Content</Filter>
+      <Filter>Content\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\BubbleRenderer.h">
+      <Filter>Content\Implicit Modeling</Filter>
     </ClInclude>
     <ClInclude Include="Content\PlantRenderer.h">
-      <Filter>Content</Filter>
+      <Filter>Content\Implicit Modeling</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\PSCoralRenderer.h">
+      <Filter>Content\Implicit Modeling</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\UnderwaterRenderer.h">
+      <Filter>Content\Implicit Modeling</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\TSCoralRenderer.h">
+      <Filter>Content\Explicit Modeling</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\VSCoralRenderer.h">
+      <Filter>Content\Explicit Modeling</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -97,10 +118,10 @@
     <AppxManifest Include="Package.appxmanifest" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Content\HullShader03.hlsl">
+    <FxCompile Include="Content\HullShader06.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="Content\DomainShader03.hlsl">
+    <FxCompile Include="Content\DomainShader06.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Content\PixelShader01.hlsl">
@@ -125,6 +146,24 @@
       <Filter>Content\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Content\VertexShader04.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\PixelShader05.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\VertexShader05.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\VertexShader06.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\PixelShader06.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\PixelShader07.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\VertexShader07.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
