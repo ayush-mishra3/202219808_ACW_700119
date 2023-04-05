@@ -4,12 +4,12 @@
 #include "..\Common\StepTimer.h"
 #include "ShaderStructures.h"
 
-namespace _202219808_D3D11_APP 
+namespace _202219808_D3D11_APP
 {
-	class VSCoralRenderer
+	class GSCoralRenderer
 	{
 	public:
-		VSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+		GSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
 
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
@@ -29,8 +29,9 @@ namespace _202219808_D3D11_APP
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_indexBuffer;
 
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>		m_vertexShader;
+		Microsoft::WRL::ComPtr<ID3D11GeometryShader>	m_geometryShader;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>		m_pixelShader;
-		
+
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_constantBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
 

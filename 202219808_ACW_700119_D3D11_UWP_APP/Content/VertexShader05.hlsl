@@ -11,13 +11,11 @@ struct VS_OUTPUT
     float3 color : COLOR0;
 };
 
-
 float hash(float n)
 {
     return frac(sin(n) * 43758.5453);
 }
 
-//Hash from iq
 float noise(in float3 x)
 {
     float3 p = floor(x);
@@ -71,10 +69,10 @@ VS_OUTPUT main(float3 vPos : POSITION, float3 vCol : COLOR)
     float4 inPos = float4(vPos, 1.0);
     
 	// Transformations
-    float r = 4.0;
+    float r = 5.0;
     inPos.x = r * sin(inPos.y) * cos(inPos.x);
-    inPos.y = r * sin(inPos.y) * sin(inPos.x);
-    inPos.z = r * cos(inPos.y) * -0.3; // sin(iTime.x * 0.5);
+    inPos.y = r * sin(inPos.y) * sin(inPos.x) - 5.0;
+    inPos.z = r * cos(inPos.y);// * -0.3; // sin(iTime.x * 0.5);
 
     inPos = mul(inPos, view);
     inPos = mul(inPos, projection);

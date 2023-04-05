@@ -69,8 +69,8 @@ void _202219808_D3D11_APPMain::Update()
 			m_psCoralRenderer->Update(m_timer);
 			m_vsCoralRenderer->Update(m_timer);
 			m_tsCoralRenderer->Update(m_timer);
-			//m_gsCoralRenderer->Update(m_timer);
-			//m_fishRenderer->Update(m_timer);
+			// m_gsCoralRenderer->Update(m_timer);
+			// m_fishRenderer->Update(m_timer);
 			m_fpsTextRenderer->Update(m_timer, m_tessFactor);
 		});
 }

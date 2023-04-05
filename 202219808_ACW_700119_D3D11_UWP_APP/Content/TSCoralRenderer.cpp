@@ -56,8 +56,8 @@ void TSCoralRenderer::CreateWindowSizeDependentResources()
 	);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 0.0f, 5.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 0.7f, 15.5f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
@@ -121,24 +121,6 @@ void TSCoralRenderer::CreateDeviceDependentResources()
 				&m_domainShader
 			)
 		);
-
-	CD3D11_BUFFER_DESC constantBufferDesc(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&constantBufferDesc,
-			nullptr,
-			&m_constantBuffer
-		)
-	);
-
-	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(TimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&timeBufferDesc,
-			nullptr,
-			&m_timeBuffer
-		)
-	);
 		});
 
 	// After the pixel shader file is loaded, create the shader and constant buffer.
@@ -320,7 +302,7 @@ void TSCoralRenderer::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
 
 	context->IASetInputLayout(m_inputLayout.Get());
 
@@ -329,15 +311,6 @@ void TSCoralRenderer::Render()
 		m_vertexShader.Get(),
 		nullptr,
 		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
 	);
 
 	// Attach our hull shader.
@@ -370,6 +343,13 @@ void TSCoralRenderer::Render()
 		nullptr
 	);
 
+	// Detach our hull shader.
+	context->GSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
 	// Rasterization
 	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
 
@@ -387,15 +367,6 @@ void TSCoralRenderer::Render()
 		m_pixelShader.Get(),
 		nullptr,
 		0
-	);
-
-	// Send the constant buffer to the graphics device.
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
 	);
 
 	// Draw the objects.

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "VSCoralRenderer.h"
+#include "GSCoralRenderer.h"
 
 #include "..\Common\DirectXHelper.h"
 
@@ -9,7 +9,7 @@ using namespace DirectX;
 using namespace Windows::Foundation;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
-VSCoralRenderer::VSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+GSCoralRenderer::GSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
@@ -19,7 +19,7 @@ VSCoralRenderer::VSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& dev
 }
 
 // Initializes view parameters when the window size changes.
-void VSCoralRenderer::CreateWindowSizeDependentResources()
+void GSCoralRenderer::CreateWindowSizeDependentResources()
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = outputSize.Width / outputSize.Height;
@@ -63,11 +63,12 @@ void VSCoralRenderer::CreateWindowSizeDependentResources()
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
-void VSCoralRenderer::CreateDeviceDependentResources()
+void GSCoralRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-	auto loadVSTask = DX::ReadDataAsync(L"VertexShader05.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"PixelShader05.cso");
+	auto loadVSTask = DX::ReadDataAsync(L"VertexShader07.cso");
+	auto loadGSTask = DX::ReadDataAsync(L"GeometryShader07.cso");
+	auto loadPSTask = DX::ReadDataAsync(L"PixelShader07.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) {
@@ -95,6 +96,18 @@ void VSCoralRenderer::CreateDeviceDependentResources()
 			&m_inputLayout
 		)
 	);
+		});
+
+	// After the geomtry shader file is loaded, create the shader and input layout.
+	auto createGSTask = loadGSTask.then([this](const std::vector<byte>& fileData) {
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateVertexShader(
+				&fileData[0],
+				fileData.size(),
+				nullptr,
+				&m_vertexShader
+			)
+		);
 		});
 
 	// After the pixel shader file is loaded, create the shader and constant buffer.
@@ -128,84 +141,74 @@ void VSCoralRenderer::CreateDeviceDependentResources()
 		});
 
 	// Once both shaders are loaded, create the mesh.
-	auto createCubeTask = (createPSTask && createVSTask).then([this]() {
+	auto createCubeTask = (createPSTask && createGSTask && createVSTask).then([this]() {
 
-	const UINT numSamples = 100;
-
-	// Load mesh vertices. Each vertex has a position and a color.
-	const UINT vSize = (numSamples - 1) * (numSamples - 1);
-	const UINT iSize = numSamples * numSamples * 2;
-
-	static VertexPositionColor quadVertices[vSize];
-	static unsigned short quadIndices[iSize];
-
-
-	float xStep = XM_2PI * 8/ (numSamples - 1);
-	float yStep = XM_2PI * 8 / (numSamples - 1);
-
-	UINT vertexFlag = 0;
-	UINT indexFlag = 0;
-	for (UINT i = 0; i < numSamples - 1; i++)
-	{
-		float y = i * yStep;
-		for (UINT j = 0; j < numSamples - 1; j++)
+		// Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor cubeVertices[] =
 		{
-			if (indexFlag > iSize)
-				break;
-			float x = j * xStep;
-			VertexPositionColor v;
-			v.pos.x = x;
-			v.pos.y = y;
-			v.pos.z = 0.0f;
-			v.color = XMFLOAT3(0.02f, 0.01f, 0.2f);
-			quadVertices[vertexFlag] = v;
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+		};
 
-			vertexFlag = vertexFlag + 1;
+		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+		vertexBufferData.pSysMem = cubeVertices;
+		vertexBufferData.SysMemPitch = 0;
+		vertexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc,
+				&vertexBufferData,
+				&m_vertexBuffer
+			)
+		);
 
-			unsigned short index0 = i * numSamples + j;
-			unsigned short index1 = index0 + 1;
-			unsigned short index2 = index0 + numSamples;
-			unsigned short index3 = index2 + 1;
+		// Load mesh indices. Each trio of indices represents
+		// a triangle to be rendered on the screen.
+		// For example: 0,2,1 means that the vertices with indexes
+		// 0, 2 and 1 from the vertex buffer compose the 
+		// first triangle of this mesh.
+		static const unsigned short cubeIndices[] =
+		{
+			0,2,1, // -x
+			1,2,3,
 
-			quadIndices[indexFlag] = index0;
-			quadIndices[indexFlag + 1] = index2;
-			quadIndices[indexFlag + 2] = index1;
-			quadIndices[indexFlag + 3] = index1;
-			quadIndices[indexFlag + 4] = index2;
-			quadIndices[indexFlag + 5] = index3;
+			4,5,6, // +x
+			5,7,6,
 
-			indexFlag = indexFlag + 6;
-		}
-	}
+			0,1,5, // -y
+			0,5,4,
 
+			2,6,7, // +y
+			2,7,3,
 
-	D3D11_SUBRESOURCE_DATA quadVertexBufferData = { 0 };
-	quadVertexBufferData.pSysMem = quadVertices;
-	quadVertexBufferData.SysMemPitch = 0;
-	quadVertexBufferData.SysMemSlicePitch = 0;
-	CD3D11_BUFFER_DESC quadVertexBufferDesc(sizeof(quadVertices), D3D11_BIND_VERTEX_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&quadVertexBufferDesc,
-			&quadVertexBufferData,
-			&m_vertexBuffer
-		)
-	);
+			0,4,6, // -z
+			0,6,2,
 
-	m_indexCount = ARRAYSIZE(quadIndices);
+			1,3,7, // +z
+			1,7,5,
+		};
 
-	D3D11_SUBRESOURCE_DATA quadIndexBufferData = { 0 };
-	quadIndexBufferData.pSysMem = quadIndices;
-	quadIndexBufferData.SysMemPitch = 0;
-	quadIndexBufferData.SysMemSlicePitch = 0;
-	CD3D11_BUFFER_DESC quadIndexBufferDesc(sizeof(quadIndices), D3D11_BIND_INDEX_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&quadIndexBufferDesc,
-			&quadIndexBufferData,
-			&m_indexBuffer
-		)
-	);
+		m_indexCount = ARRAYSIZE(cubeIndices);
+
+		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+		indexBufferData.pSysMem = cubeIndices;
+		indexBufferData.SysMemPitch = 0;
+		indexBufferData.SysMemSlicePitch = 0;
+		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc,
+				&indexBufferData,
+				&m_indexBuffer
+			)
+		);
 		});
 
 	// Once the cube is loaded, the object is ready to be rendered.
@@ -214,11 +217,12 @@ void VSCoralRenderer::CreateDeviceDependentResources()
 		});
 }
 
-void VSCoralRenderer::ReleaseDeviceDependentResources()
+void GSCoralRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 	m_vertexShader.Reset();
 	m_inputLayout.Reset();
+	m_geometryShader.Reset();
 	m_pixelShader.Reset();
 	m_constantBuffer.Reset();
 	m_timeBuffer.Reset();
@@ -227,7 +231,7 @@ void VSCoralRenderer::ReleaseDeviceDependentResources()
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
-void VSCoralRenderer::Update(DX::StepTimer const& timer)
+void GSCoralRenderer::Update(DX::StepTimer const& timer)
 {
 	m_timeBufferData.time = timer.GetTotalSeconds();
 
@@ -235,7 +239,7 @@ void VSCoralRenderer::Update(DX::StepTimer const& timer)
 }
 
 // Renders one frame using the vertex and pixel shaders.
-void VSCoralRenderer::Render()
+void GSCoralRenderer::Render()
 {
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
@@ -319,6 +323,12 @@ void VSCoralRenderer::Render()
 
 	context->DSSetShader(
 		nullptr,
+		nullptr,
+		0
+	);
+
+	context->GSSetShader(
+		m_geometryShader.Get(),
 		nullptr,
 		0
 	);

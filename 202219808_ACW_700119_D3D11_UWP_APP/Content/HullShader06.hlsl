@@ -12,7 +12,7 @@ struct HS_Tri_Tess_Factors
 HS_Tri_Tess_Factors ConstantHS_Tri(InputPatch<VS_OUTPUT, 3> ip)
 {
     HS_Tri_Tess_Factors Output;
-    float TessAmount = 30.0;
+    float TessAmount = 31.0;
     Output.Edges[0] = Output.Edges[1] = Output.Edges[2] = TessAmount;
     Output.Inside = TessAmount;
     return Output;

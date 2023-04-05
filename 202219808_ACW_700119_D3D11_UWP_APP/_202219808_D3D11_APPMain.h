@@ -8,7 +8,7 @@
 #include "Content\PSCoralRenderer.h"
 #include "Content\VSCoralRenderer.h"
 #include "Content\TSCoralRenderer.h"
-// #include "Content\GSCoralRenderer.h"
+#include "Content\GSCoralRenderer.h"
 // #include "Content\FishRenderer.h"
 #include "Content\FpsTextRenderer.h"
 
@@ -51,7 +51,7 @@ namespace _202219808_D3D11_APP
 		// Explicit geometry
 		std::unique_ptr<VSCoralRenderer>	   m_vsCoralRenderer;
 		std::unique_ptr<TSCoralRenderer>	   m_tsCoralRenderer;
-		//std::unique_ptr<GSCoralRenderer>	   m_gsCoralRenderer;
+		std::unique_ptr<GSCoralRenderer>	   m_gsCoralRenderer;
 		//std::unique_ptr<FishRenderer>		   m_fishRenderer;
 
 		// Rendering loop timer.
