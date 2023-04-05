@@ -2,16 +2,18 @@
 
 #include "Common\StepTimer.h"
 #include "Common\DeviceResources.h"
-#include "Content\Camera.h"
-#include "Content\Sample3DSceneRenderer.h"
-#include "Content\SampleFpsTextRenderer.h"
-#include "Content\ImplicitModelRenderer.h"
+#include "Content\FpsTextRenderer.h"
+#include "Content\UnderwaterRenderer.h"
+#include "Content\PlantRenderer.h"
 #include "Content\TessellationRenderer.h"
 #include "Content\VertexShaderRenderer.h"
 
 // Renders Direct2D and 3D content on the screen.
 namespace _202219808_D3D11_APP
 {
+	using namespace Windows::System;
+	using namespace Windows::UI::Core;
+
 	class _202219808_D3D11_APPMain : public DX::IDeviceNotify
 	{
 	public:
@@ -35,9 +37,10 @@ namespace _202219808_D3D11_APP
 		std::shared_ptr<DX::DeviceResources>   m_deviceResources;
 
 		// TODO: Replace with your own content renderers.
-		std::unique_ptr<SampleFpsTextRenderer> m_fpsTextRenderer;
+		std::unique_ptr<FpsTextRenderer>	   m_fpsTextRenderer;
 		
-		std::unique_ptr<ImplicitModelRenderer> m_implicitModelRenderer;
+		std::unique_ptr<UnderwaterRenderer>    m_underwaterRenderer;
+		std::unique_ptr<PlantRenderer>		   m_plantRenderer;
 		std::unique_ptr<VertexShaderRenderer>  m_vertexShaderRenderer;
 		std::unique_ptr<TessellationRenderer>  m_tessellationShaderRenderer;
 

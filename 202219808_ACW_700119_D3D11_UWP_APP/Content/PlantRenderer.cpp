@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "ImplicitModelRenderer.h"
+#include "PlantRenderer.h"
 
 #include "..\Common\DirectXHelper.h"
 
@@ -9,7 +9,7 @@ using namespace DirectX;
 using namespace Windows::Foundation;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
-ImplicitModelRenderer::ImplicitModelRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
+PlantRenderer::PlantRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
 	m_deviceResources(deviceResources)
@@ -19,7 +19,7 @@ ImplicitModelRenderer::ImplicitModelRenderer(const std::shared_ptr<DX::DeviceRes
 }
 
 // Initializes view parameters when the window size changes.
-void ImplicitModelRenderer::CreateWindowSizeDependentResources()
+void PlantRenderer::CreateWindowSizeDependentResources()
 {
 	Size outputSize = m_deviceResources->GetOutputSize();
 	float aspectRatio = outputSize.Width / outputSize.Height;
@@ -56,18 +56,18 @@ void ImplicitModelRenderer::CreateWindowSizeDependentResources()
 	);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 4.0f, 20.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, 5.1f, 0.0f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 4.0f, 10.5f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, 4.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
 }
 
-void ImplicitModelRenderer::CreateDeviceDependentResources()
+void PlantRenderer::CreateDeviceDependentResources()
 {
 	// Load shaders asynchronously.
-	auto loadVSTask = DX::ReadDataAsync(L"VertexShader01.cso");
-	auto loadPSTask = DX::ReadDataAsync(L"PixelShader01.cso");
+	auto loadVSTask = DX::ReadDataAsync(L"VertexShader04.cso");
+	auto loadPSTask = DX::ReadDataAsync(L"PixelShader04.cso");
 
 	// After the vertex shader file is loaded, create the shader and input layout.
 	auto createVSTask = loadVSTask.then([this](const std::vector<byte>& fileData) {
@@ -117,15 +117,6 @@ void ImplicitModelRenderer::CreateDeviceDependentResources()
 		)
 	);
 
-	CD3D11_BUFFER_DESC cameraBufferDesc(sizeof(CameraPositionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&cameraBufferDesc,
-			nullptr,
-			&m_cameraBuffer
-		)
-	);
-
 	CD3D11_BUFFER_DESC timeBufferDesc(sizeof(TotalTimeConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 	DX::ThrowIfFailed(
 		m_deviceResources->GetD3DDevice()->CreateBuffer(
@@ -134,32 +125,23 @@ void ImplicitModelRenderer::CreateDeviceDependentResources()
 			&m_timeBuffer
 		)
 	);
-
-	CD3D11_BUFFER_DESC resolutionBufferDesc(sizeof(ResolutionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-	DX::ThrowIfFailed(
-		m_deviceResources->GetD3DDevice()->CreateBuffer(
-			&resolutionBufferDesc,
-			nullptr,
-			&m_resolutionBuffer
-		)
-	);
 		});
 
 	// Once both shaders are loaded, create the mesh.
 	auto createCubeTask = (createPSTask && createVSTask).then([this]() {
 
-	// Load mesh vertices. Each vertex has a position and a color.
-	static const VertexPositionColor cubeVertices[] =
-	{
-		{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-		{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-		{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-		{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-		{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
-		{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-		{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
-		{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
-	};
+		// Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor cubeVertices[] =
+		{
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
+			{XMFLOAT3(0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
+		};
 
 	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
 	vertexBufferData.pSysMem = cubeVertices;
@@ -223,40 +205,28 @@ void ImplicitModelRenderer::CreateDeviceDependentResources()
 		});
 }
 
-void ImplicitModelRenderer::ReleaseDeviceDependentResources()
+void PlantRenderer::ReleaseDeviceDependentResources()
 {
 	m_loadingComplete = false;
 	m_vertexShader.Reset();
 	m_inputLayout.Reset();
 	m_pixelShader.Reset();
 	m_constantBuffer.Reset();
-	m_cameraBuffer.Reset();
 	m_timeBuffer.Reset();
-	m_resolutionBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
 
 // Called once per frame, rotates the cube and calculates the model and view matrices.
-void ImplicitModelRenderer::Update(DX::StepTimer const& timer)
+void PlantRenderer::Update(DX::StepTimer const& timer)
 {
-	auto context = m_deviceResources->GetD3DDeviceContext();
-
 	m_timeBufferData.time = timer.GetTotalSeconds();
-	D3D11_VIEWPORT viewport;
-	UINT numViewports = 1;
-	context->RSGetViewports(&numViewports, &viewport);
-
-	int viewportWidth = (int)viewport.Width;
-	int viewportHeight = (int)viewport.Height;
-	m_resolutionBufferData.height = viewportHeight;
-	m_resolutionBufferData.width = viewportWidth;
 
 	DirectX::XMStoreFloat4x4(&m_constantBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 }
 
 // Renders one frame using the vertex and pixel shaders.
-void ImplicitModelRenderer::Render()
+void PlantRenderer::Render()
 {
 	// Loading is asynchronous. Only draw geometry after it's loaded.
 	if (!m_loadingComplete)
@@ -278,16 +248,6 @@ void ImplicitModelRenderer::Render()
 	);
 
 	context->UpdateSubresource1(
-		m_cameraBuffer.Get(),
-		0,
-		NULL,
-		&m_cameraBufferData,
-		0,
-		0,
-		0
-	);
-
-	context->UpdateSubresource1(
 		m_timeBuffer.Get(),
 		0,
 		NULL,
@@ -297,16 +257,6 @@ void ImplicitModelRenderer::Render()
 		0
 	);
 
-	context->UpdateSubresource1(
-		m_resolutionBuffer.Get(),
-		0,
-		NULL,
-		&m_resolutionBufferData,
-		0,
-		0,
-		0
-	);
-	
 
 	// Each vertex is one instance of the VertexPositionColor struct.
 	UINT stride = sizeof(VertexPositionColor);
@@ -368,7 +318,7 @@ void ImplicitModelRenderer::Render()
 
 	auto device = m_deviceResources->GetD3DDevice();
 
-	rasterizerDesc.CullMode = D3D11_CULL_NONE;
+	rasterizerDesc.CullMode = D3D11_CULL_BACK;
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
@@ -390,27 +340,10 @@ void ImplicitModelRenderer::Render()
 		nullptr,
 		nullptr
 	);
-
 	context->PSSetConstantBuffers1(
 		1,
-		1,
-		m_cameraBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	context->PSSetConstantBuffers1(
-		2,
 		1,
 		m_timeBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	context->PSSetConstantBuffers1(
-		3,
-		1,
-		m_resolutionBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
 	);

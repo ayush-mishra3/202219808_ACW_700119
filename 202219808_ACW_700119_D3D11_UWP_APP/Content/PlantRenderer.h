@@ -4,17 +4,17 @@
 #include "..\Common\StepTimer.h"
 #include "ShaderStructures.h"
 
-namespace _202219808_D3D11_APP
+namespace _202219808_D3D11_APP 
 {
-	class ImplicitModelRenderer
+	class PlantRenderer
 	{
 	public:
-		ImplicitModelRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
-		
+		PlantRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources);
+
 		void CreateDeviceDependentResources();
 		void CreateWindowSizeDependentResources();
 		void ReleaseDeviceDependentResources();
-		
+
 		void Update(DX::StepTimer const& timer);
 		void Render();
 
@@ -31,13 +31,9 @@ namespace _202219808_D3D11_APP
 
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_constantBuffer;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_timeBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_cameraBuffer;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>			m_resolutionBuffer;
 
 		ModelViewProjectionConstantBuffer				m_constantBufferData;
 		TotalTimeConstantBuffer							m_timeBufferData;
-		CameraPositionConstantBuffer					m_cameraBufferData;
-		ResolutionConstantBuffer					    m_resolutionBufferData;
 
 		// Rasterization
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState>	m_rasterizerState;

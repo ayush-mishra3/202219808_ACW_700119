@@ -23,21 +23,9 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClInclude Include="Content\Sample3DSceneRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\SampleFpsTextRenderer.h">
-      <Filter>Content</Filter>
-    </ClInclude>
     <ClInclude Include="Content\ShaderStructures.h">
       <Filter>Content</Filter>
     </ClInclude>
-    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
-    <ClCompile Include="Content\SampleFpsTextRenderer.cpp">
-      <Filter>Content</Filter>
-    </ClCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
@@ -64,7 +52,7 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="_202219808_D3D11_APPMain.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Content\ImplicitModelRenderer.cpp">
+    <ClCompile Include="Content\UnderwaterRenderer.cpp">
       <Filter>Content</Filter>
     </ClCompile>
     <ClCompile Include="Content\TessellationRenderer.cpp">
@@ -73,18 +61,30 @@
     <ClCompile Include="Content\VertexShaderRenderer.cpp">
       <Filter>Content</Filter>
     </ClCompile>
+    <ClCompile Include="Content\FpsTextRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
+    <ClCompile Include="Content\PlantRenderer.cpp">
+      <Filter>Content</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="_202219808_D3D11_APPMain.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Content\ImplicitModelRenderer.h">
+    <ClInclude Include="Content\UnderwaterRenderer.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\TessellationRenderer.h">
       <Filter>Content</Filter>
     </ClInclude>
     <ClInclude Include="Content\VertexShaderRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\FpsTextRenderer.h">
+      <Filter>Content</Filter>
+    </ClInclude>
+    <ClInclude Include="Content\PlantRenderer.h">
       <Filter>Content</Filter>
     </ClInclude>
   </ItemGroup>
@@ -119,6 +119,12 @@
       <Filter>Content\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="Content\VertexShader03.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\PixelShader04.hlsl">
+      <Filter>Content\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Content\VertexShader04.hlsl">
       <Filter>Content\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

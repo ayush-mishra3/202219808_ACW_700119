@@ -15,6 +15,8 @@
 #define mix lerp
 #define mod fmod
 
+static float4 Eye = float4(0, 2.0, 5.0, 1);
+
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
     matrix model;
@@ -22,27 +24,11 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
 };
 
-cbuffer CameraConstantBuffer : register(b1)
-    
-{
-    float3  camPos;
-    float padding1;
-};
-
-cbuffer TimeConstantBuffer : register(b2)
+cbuffer TimeConstantBuffer : register(b1)
 {
     float iTime;
     float3 padding2;
 };
-
-cbuffer ResolutionConstantBuffer : register(b3)
-{
-    float sHeight;
-    float sWidth;
-    float2 padding3;
-};
-
-static float4 Eye = float4(0, 2.0, 15, 1); //eye position 
 
 struct Ray
 {
@@ -56,12 +42,13 @@ struct VS_Canvas
     float2 canvasXY : TEXCOORD0;
 };
 
+// Noise function sampled from shader toy
+// https://www.shadertoy.com/view/WdByRR
 float hash(float n)
 {
-    return fract(sin(n) * 73758.5453);
+    return fract(sin(n) * 43758.5453);
 }
 
-//Hash from iq
 float noise(in vec3 x)
 {
     vec3 p = floor(x);
@@ -110,9 +97,9 @@ vec3 caustic(vec2 uv)
     return color;
 }
 
-// perf increase for god ray, eliminates Y
 float causticX(float x, float power, float gtime)
 {
+// perf increase for god ray, eliminates Y
     float p = mod(x * TAU, TAU) - 250.0;
     float time = gtime * .5 + 23.0;
 
@@ -144,32 +131,42 @@ float GodRays(vec2 uv)
     return light;
 }
 
-vec3 raymarchTerrain(in vec3 ro, in vec3 rd, in float tmin, in float tmax)
+float speck(vec2 pos, vec2 uv, float radius)
 {
-    float t = tmin;
+    pos.y += 0.05;
+    float color = distance(pos, uv);
+    
+    vec3 tex = vec3(noise(vec3(uv, 1.0)), noise(vec3(uv, 1.0)), noise(vec3(uv, 1.0)));
+    vec3 tex2 = vec3(noise(vec3(pos, 1.0)), noise(vec3(pos, 1.0)), noise(vec3(pos, 1.0)));
+    
+    color = clamp((1.0 - pow(color * (5.0 / radius), pow(radius, 0.9))), 0.0, 1.0);
+    color *= clamp(mix(sin(tex.y) + 0.1, cos(tex.x), 0.5) * sin(tex2.x) + 0.2, 0.0, 1.0);
+    return color;
+}
+
+vec3 rayMarch(in vec3 ro, in vec3 rd, in float start, in float end)
+{
+    float depth = start;
     vec3 res = vec3(-1.0, -1.0, -1.0);
 
     for (int i = 0; i < 255; i++)
     {
-        vec3 p = ro + rd * t;
+        vec3 p = ro + depth * rd;
+        
         float n = noise(p);
         vec2 m = vec2(0.0, p.y - n);
-        res = vec3(m, t);
+        res = vec3(m, depth);
+        float dist = res.y;
 
-        float d = res.y;
+        if (dist < (0.001 * depth) || depth > end) { break;  }
 
-        if (d < (0.001 * t) || t > tmax)
-        {
-            break;
-        }
-
-        t += 0.5 * d;
+        depth += 0.5 * dist;
     }
 
     return res;
 }
 
-vec3 getTerrainNormal(in vec3 p)
+vec3 getNormal(in vec3 p)
 {
     float eps = 0.0045;
 
@@ -197,29 +194,31 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     // terrain marching
     float tmin = 0.1;
     float tmax = 50.0;
-    vec3 res = raymarchTerrain(ro, rd, tmin, tmax);
+    vec3 res = rayMarch(ro, rd, tmin, tmax);
 
     vec3 colorBubble = vec3(0.0, 0.0, 0.0);
-    //float bubble = 0.0;
-    //bubble += speck(vec2(sin(iTime * 0.32), cos(iTime) * 0.2 + 0.1), rd.xy, -0.08 * rd.z);
-    //bubble += speck(vec2(sin(1.0 - iTime * 0.39) + 0.5, cos(1.0 - iTime * 0.69) * 0.2 + 0.15), rd.xy, 0.07 * rd.z);
-    //bubble += speck(vec2(cos(1.0 - iTime * 0.5) - 0.5, sin(1.0 - iTime * 0.36) * 0.2 + 0.1), rd.xy, 0.12 * rd.z);
-    //bubble += speck(vec2(sin(iTime * 0.44) - 1.0, cos(1.0 - iTime * 0.32) * 0.2 + 0.15), rd.xy, -0.09 * rd.z);
-    //bubble += speck(vec2(1.0 - sin(1.0 - iTime * 0.6) - 1.3, sin(1.0 - iTime * 0.82) * 0.2 + 0.1), rd.xy, 0.15 * rd.z);
+    float bubble = 0.0;
+    bubble += speck(vec2(sin(iTime * 0.032), cos(iTime * 0.5) * 0.2 + 0.1), rd.xy, -0.08 * rd.z);
+    bubble += speck(vec2(sin(1.0 - iTime * 0.039) + 0.5, cos(1.0 - iTime * 0.069) * 0.2 + 0.15), rd.xy, 0.07 * rd.z);
+    bubble += speck(vec2(cos(1.0 - iTime * 0.05) - 0.5, sin(1.0 - iTime * 0.036) * 0.2 + 0.1), rd.xy, 0.12 * rd.z);
+    bubble += speck(vec2(sin(iTime * 0.044) - 1.0, cos(1.0 - iTime * 0.032) * 0.2 + 0.15), rd.xy, -0.09 * rd.z);
+    bubble += speck(vec2(1.0 - sin(1.0 - iTime * 0.06) - 1.3, sin(1.0 - iTime * 0.082) * 0.2 + 0.1), rd.xy, 0.15 * rd.z);
 
-    //colorBubble = bubble * vec3(0.2, 0.7, 1.0);
-    //if (rd.z < 0.1)
-    //{
-    //    float y = 0.00;
-    //    for (float x = 0.39; x < 6.28; x += 0.39)
-    //    {
-    //        vec3 height = texture(iChannel0, vec2(x)).xyz;
-    //        y += 0.03 * height.x;
-    //        bubble = speck(vec2(sin(iTime + x) * 0.5 + 0.2, cos(iTime * height.z * 2.1 + height.x * 1.7) * 0.2 + 0.2),
-    //            rd.xy, (cos(iTime + height.y * 2.3 + rd.z * -1.0) * -0.01 + 0.25));
-    //        colorBubble += bubble * vec3(-0.1 * rd.z, -0.5 * rd.z, 1.0);
-    //    }
-    //}
+    colorBubble = bubble * vec3(0.2, 0.7, 1.0);
+    if (rd.z < 0.1)
+    {
+        float y = 0.00;
+        for (float x = 0.39; x < 6.28; x += 0.39)
+        {
+            vec3 height = noise(vec3(x, x, 1.0));
+            
+            y += 0.03 * height.x;
+            bubble = speck(vec2(sin(iTime + x) * 0.5 + 0.2, cos(iTime * height.z * 2.1 + height.x * 1.7) * 0.2 + 0.2),
+                rd.xy, (cos(iTime + height.y * 2.3 + rd.z * -1.0) * -0.01 + 0.25));
+            
+            colorBubble += bubble * vec3(-0.1 * rd.z, -0.5 * rd.z, 1.0);
+        }
+    }
 
     float t = res.z;
 
@@ -229,13 +228,17 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
         vec3 nor;
 
         // add bumps
-        nor = getTerrainNormal(pos);
-        nor = normalize(nor + 1.5 * getTerrainNormal(pos * 10.0));
+        nor = getNormal(pos);
+        nor = normalize(nor + 1.5 * getNormal(pos * 10.0));
 
         float sun = clamp(dot(sunDirection, nor), 0.0, 1.0);
         sky = clamp(0.5 + 0.5 * nor.y, 0.0, 1.0);
-        // vec3 diffuse = mix(texture(iChannel2, vec2(pos.x * pow(pos.y, 0.01), pos.z * pow(pos.y, 0.01))).xyz, vec3(1.0, 1.0, 1.0), clamp(1.1 - pos.y, 0.0, 1.0));
-        vec3 diffuse = vec3(0.5, 0.5, 0.5);
+
+        vec3 diffuse = mix(
+            vec3(noise(vec3(pos.x * pow(pos.y, 0.01), pos.z * pow(pos.y, 0.01), 1.0)), noise(vec3(pos.x * pow(pos.y, 0.01), pos.z * pow(pos.y, 0.01), 1.0)), noise(vec3(pos.x * pow(pos.y, 0.01), pos.z * pow(pos.y, 0.01), 1.0))),
+            vec3(1.0, 1.0, 1.0), 
+            clamp(1.1 - pos.y, 0.0, 1.0)
+        );
 
         diffuse *= caustic(vec2(mix(pos.x, pos.y, 0.2), mix(pos.z, pos.y, 0.2)) * 1.1);
         
@@ -268,7 +271,6 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
 float4 main(VS_Canvas input) : SV_Target
 {
-
 	// specify primary ray: 
     Ray eyeray;
 

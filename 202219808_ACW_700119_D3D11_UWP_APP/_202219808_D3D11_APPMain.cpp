@@ -16,10 +16,11 @@ _202219808_D3D11_APPMain::_202219808_D3D11_APPMain(const std::shared_ptr<DX::Dev
 	m_deviceResources->RegisterDeviceNotify(this);
 
 	// TODO: Replace this with your app's content initialization.
-	m_implicitModelRenderer = std::unique_ptr<ImplicitModelRenderer>(new ImplicitModelRenderer(m_deviceResources));
+	m_underwaterRenderer = std::unique_ptr<UnderwaterRenderer>(new UnderwaterRenderer(m_deviceResources));
+	m_plantRenderer = std::unique_ptr<PlantRenderer>(new PlantRenderer(m_deviceResources));
 	//m_vertexShaderRenderer = std::unique_ptr<VertexShaderRenderer>(new VertexShaderRenderer(m_deviceResources));
 	//m_tessellationShaderRenderer = std::unique_ptr<TessellationRenderer>(new TessellationRenderer(m_deviceResources));
-	m_fpsTextRenderer = std::unique_ptr<SampleFpsTextRenderer>(new SampleFpsTextRenderer(m_deviceResources));
+	m_fpsTextRenderer = std::unique_ptr<FpsTextRenderer>(new FpsTextRenderer(m_deviceResources));
 	// TODO: Change the timer settings if you want something other than the default variable timestep mode.
 	// e.g. for 60 FPS fixed timestep update logic, call:
 	/*
@@ -38,7 +39,8 @@ _202219808_D3D11_APPMain::~_202219808_D3D11_APPMain()
 void _202219808_D3D11_APPMain::CreateWindowSizeDependentResources()
 {
 	// TODO: Replace this with the size-dependent initialization of your app's content.
-	m_implicitModelRenderer->CreateWindowSizeDependentResources();
+	m_underwaterRenderer->CreateWindowSizeDependentResources();
+	m_plantRenderer->CreateWindowSizeDependentResources();
 	//m_vertexShaderRenderer->CreateWindowSizeDependentResources();
 	//m_tessellationShaderRenderer->CreateWindowSizeDependentResources();
 }
@@ -52,7 +54,8 @@ void _202219808_D3D11_APPMain::Update()
 		{
 			// TODO: Replace this with your app's content update functions.
 
-			m_implicitModelRenderer->Update(m_timer);
+			m_underwaterRenderer->Update(m_timer);
+			m_plantRenderer->Update(m_timer);
 			//m_vertexShaderRenderer->Update(m_timer);
 			//m_tessellationShaderRenderer->Update(m_timer);
 			m_fpsTextRenderer->Update(m_timer, m_tessFactor);
@@ -85,7 +88,8 @@ bool _202219808_D3D11_APPMain::Render()
 
 	// Render the scene objects.
 	// TODO: Replace this with your app's content rendering functions.
-	m_implicitModelRenderer->Render();
+	m_underwaterRenderer->Render();
+	m_plantRenderer->Render();
 	//m_vertexShaderRenderer->Render();
 	//m_tessellationShaderRenderer->Render();
 	m_fpsTextRenderer->Render();
@@ -98,7 +102,8 @@ bool _202219808_D3D11_APPMain::Render()
 // Notifies renderers that device resources need to be released.
 void _202219808_D3D11_APPMain::OnDeviceLost()
 {
-	m_implicitModelRenderer->ReleaseDeviceDependentResources();
+	m_underwaterRenderer->ReleaseDeviceDependentResources();
+	m_plantRenderer->ReleaseDeviceDependentResources();
 	//m_vertexShaderRenderer->ReleaseDeviceDependentResources();
 	//m_tessellationShaderRenderer->ReleaseDeviceDependentResources();
 	m_fpsTextRenderer->ReleaseDeviceDependentResources();
@@ -107,7 +112,8 @@ void _202219808_D3D11_APPMain::OnDeviceLost()
 // Notifies renderers that device resources may now be recreated.
 void _202219808_D3D11_APPMain::OnDeviceRestored()
 {
-	m_implicitModelRenderer->CreateDeviceDependentResources();
+	m_underwaterRenderer->CreateDeviceDependentResources();
+	m_plantRenderer->CreateDeviceDependentResources();
 	//m_vertexShaderRenderer->CreateDeviceDependentResources();
 	//m_tessellationShaderRenderer->CreateDeviceDependentResources();
 	m_fpsTextRenderer->CreateDeviceDependentResources();
