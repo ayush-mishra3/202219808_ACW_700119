@@ -8,7 +8,7 @@
 
 - [ ] Coral objects. 
     
-    - [ ] Vertex shader-based coral object. 
+    - [x] Vertex shader-based coral object. 
     - [x] Pixel shader-based coral object. 
     - [ ] Geometry shader-based coral object. 
     - [ ] Hull and domain shader-based coral objects. 
