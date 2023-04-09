@@ -2,9 +2,9 @@
 
 ### Feature list:
 
-- [ ] Underwater environment. 
+- [x] Underwater environment. 
 
-- [ ] Procedural sea floor. 
+- [x] Procedural sea floor. 
 
 - [ ] Coral objects. 
     
@@ -13,7 +13,7 @@
     - [ ] Geometry shader-based coral object. 
     - [ ] Hull and domain shader-based coral objects. 
 
-- [ ] Reflective bubbles. 
+- [x] Reflective bubbles. 
 
 - [ ] A shoal of colourful coral reef fish created as a particle system.
     
@@ -21,4 +21,5 @@
     - [ ] Regard the collection of quads generated from the geometry shader as a collection of quad particles and use them to animate a shoal of colourful coral reef fish.
 
 - [ ] Implicit sea plant modelling and animation. Model and animate some sea plants either as an explicit object in vertex shader or geometry shaders,  or as a kind of distance function and visualized using the ray marching technique.
-- [ ] Novelty and own effects. 
+
+- [x] Novelty and own effects. 
