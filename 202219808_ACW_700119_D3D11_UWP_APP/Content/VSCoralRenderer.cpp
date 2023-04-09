@@ -140,8 +140,8 @@ void VSCoralRenderer::CreateDeviceDependentResources()
 	static unsigned short quadIndices[iSize];
 
 
-	float xStep = XM_2PI * 8/ (numSamples - 1);
-	float yStep = XM_2PI * 8 / (numSamples - 1);
+	float xStep = XM_PI / (numSamples - 1);
+	float yStep = XM_2PI / (numSamples - 1);
 
 	UINT vertexFlag = 0;
 	UINT indexFlag = 0;

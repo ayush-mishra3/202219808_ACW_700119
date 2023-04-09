@@ -16,6 +16,7 @@
 #define mod fmod
 
 static float4 Eye = float4(0, 1.0, 5.0, 1);
+static const float precis = 0.0005;
 
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
@@ -48,14 +49,118 @@ static const float MIN_DIST = 0.0;
 static const float MAX_DIST = 100.0;
 static const float EPSILON = 0.0001;
 
-/**
- * Signed distance function for a sphere centered at the origin with radius 1.0;
- */
-float sphereSDF(vec3 samplePoint)
+
+// 0 = lattice
+// 1 = simplex
+#define NOISE 0
+
+
+// please, do not use in real projects - replace this by something better
+float hash(vec3 p)
 {
-    return length(samplePoint) - 1.0;
+    p = 17.0 * fract(p * 0.3183099 + vec3(.11, .17, .13));
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
 }
 
+// https://iquilezles.org/articles/boxfunctions
+vec2 iBox(in vec3 ro, in vec3 rd, in vec3 rad)
+{
+    vec3 m = 1.0 / rd;
+    vec3 n = m * ro;
+    vec3 k = abs(m) * rad;
+    vec3 t1 = -n - k;
+    vec3 t2 = -n + k;
+    float tN = max(max(t1.x, t1.y), t1.z);
+    float tF = min(min(t2.x, t2.y), t2.z);
+    if (tN > tF || tF < 0.0) return vec2(-1.0, -1.0);
+    return vec2(tN, tF);
+}
+
+// https://iquilezles.org/articles/distfunctions
+float sdBox(vec3 p, vec3 b)
+{
+    vec3 d = abs(p) - b;
+    return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+}
+
+// https://iquilezles.org/articles/smin
+float smax(float a, float b, float k)
+{
+    float h = max(k - abs(a - b), 0.0);
+    return max(a, b) + h * h * 0.25 / k;
+}
+
+//---------------------------------------------------------------
+// A random SDF - it places spheres of random sizes in a grid
+//---------------------------------------------------------------
+
+float sdBase(in vec3 p)
+{
+#if NOISE==0
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+
+#define RAD(r) ((r)*(r)*0.7)
+#define SPH(i,f,c) length(f-c)-RAD(hash(i+c))
+
+    return min(min(min(SPH(i, f, vec3(0, 0, 0)),
+        SPH(i, f, vec3(0, 0, 1))),
+        min(SPH(i, f, vec3(0, 1, 0)),
+            SPH(i, f, vec3(0, 1, 1)))),
+        min(min(SPH(i, f, vec3(1, 0, 0)),
+            SPH(i, f, vec3(1, 0, 1))),
+            min(SPH(i, f, vec3(1, 1, 0)),
+                SPH(i, f, vec3(1, 1, 1)))));
+#else
+    const float K1 = 0.333333333;
+    const float K2 = 0.166666667;
+
+    vec3 i = floor(p + (p.x + p.y + p.z) * K1);
+    vec3 d0 = p - (i - (i.x + i.y + i.z) * K2);
+
+    vec3 e = step(d0.yzx, d0);
+    vec3 i1 = e * (1.0 - e.zxy);
+    vec3 i2 = 1.0 - e.zxy * (1.0 - e);
+
+    vec3 d1 = d0 - (i1 - 1.0 * K2);
+    vec3 d2 = d0 - (i2 - 2.0 * K2);
+    vec3 d3 = d0 - (1.0 - 3.0 * K2);
+
+    float r0 = hash(i + 0.0);
+    float r1 = hash(i + i1);
+    float r2 = hash(i + i2);
+    float r3 = hash(i + 1.0);
+
+#define SPH(d,r) length(d)-r*r*0.55
+
+    return min(min(SPH(d0, r0),
+        SPH(d1, r1)),
+        min(SPH(d2, r2),
+            SPH(d3, r3)));
+#endif
+}
+
+//---------------------------------------------------------------
+// subtractive fbm
+//---------------------------------------------------------------
+vec2 sdFbm(in vec3 p, float d)
+{
+    const mat3 m = mat3(0.00, 0.80, 0.60,
+        -0.80, 0.36, -0.48,
+        -0.60, -0.48, 0.64);
+    float t = 0.0;
+    float s = 1.0;
+    for (int i = 0; i < 7; i++)
+    {
+        float n = s * sdBase(p);
+        d = smax(d, -n, 0.15 * s);
+        t += d;
+        p = mul(2.0, mul(m,p));
+        s = 0.55 * s;
+    }
+
+    return vec2(d, t);
+}
 /**
  * Signed distance function describing the scene.
  * 
@@ -63,9 +168,17 @@ float sphereSDF(vec3 samplePoint)
  * Sign indicates whether the point is inside or outside the surface,
  * negative indicating inside.
  */
-float sceneSDF(vec3 samplePoint)
+float2 map(vec3 p)
 {
-    return sphereSDF(samplePoint);
+    // box
+    float d = sdBox(p, vec3(1.0, 1.0, 1.0));
+
+    // fbm
+    vec2 dt = sdFbm(p + 0.5, d);
+
+    dt.y = 1.0 + dt.y * 2.0; dt.y = dt.y * dt.y;
+
+    return dt;
 }
 
 /**
@@ -78,117 +191,74 @@ float sceneSDF(vec3 samplePoint)
  * start: the starting distance away from the eye
  * end: the max distance away from the ey to march before giving up
  */
-float shortestDistanceToSurface(vec3 eye, vec3 marchingDirection, float start, float end)
+float2 rayCast(vec3 ro, vec3 rd)
 {
-    float depth = start;
-    for (int i = 0; i < MAX_MARCHING_STEPS; i++)
+    vec2 res = vec2(-1.0, -1.0);
+
+    // bounding volume    
+    vec2 dis = iBox(ro, rd, vec3(1.0, 1.0, 1.0));
+    if (dis.y < 0.0) return res;
+
+    // raymarch
+    float t = dis.x;
+    for (int i = 0; i < 256; i++)
     {
-        float dist = sceneSDF(eye + depth * marchingDirection);
-        if (dist < EPSILON)
-        {
-            return depth;
-        }
-        depth += dist;
-        if (depth >= end)
-        {
-            return end;
-        }
+        vec3 p = ro + t * rd;
+        vec2 h = map(p);
+        res.x = t;
+        res.y = h.y;
+
+        if (h.x<precis || t>dis.y) break;
+        t += h.x;
     }
-    return end;
+
+    if (t > dis.y) res = vec2(-1.0, -1.0);
+    return res;
 }
             
 /**
  * Using the gradient of the SDF, estimate the normal on the surface at point p.
  */
-vec3 estimateNormal(vec3 p)
+vec3 calcNormal(vec3 pos)
 {
-    return normalize(vec3(
-        sceneSDF(vec3(p.x + EPSILON, p.y, p.z)) - sceneSDF(vec3(p.x - EPSILON, p.y, p.z)),
-        sceneSDF(vec3(p.x, p.y + EPSILON, p.z)) - sceneSDF(vec3(p.x, p.y - EPSILON, p.z)),
-        sceneSDF(vec3(p.x, p.y, p.z + EPSILON)) - sceneSDF(vec3(p.x, p.y, p.z - EPSILON))
-    ));
+    vec2 e = vec2(1.0, -1.0) * 0.5773 * precis;
+    return normalize(e.xyy * map(pos + e.xyy).x +
+        e.yyx * map(pos + e.yyx).x +
+        e.yxy * map(pos + e.yxy).x +
+        e.xxx * map(pos + e.xxx).x);
 }
 
-/**
- * Lighting contribution of a single point light source via Phong illumination.
- * 
- * The vec3 returned is the RGB color of the light's contribution.
- *
- * k_a: Ambient color
- * k_d: Diffuse color
- * k_s: Specular color
- * alpha: Shininess coefficient
- * p: position of point being lit
- * eye: the position of the camera
- * lightPos: the position of the light
- * lightIntensity: color/intensity of the light
- *
- * See https://en.wikipedia.org/wiki/Phong_reflection_model#Description
- */
-vec3 phongContribForLight(vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye,
-                          vec3 lightPos, vec3 lightIntensity)
+// https://iquilezles.org/articles/rmshadows
+float calcSoftShadow(vec3 ro, vec3 rd, float tmin, float tmax, float w)
 {
-    vec3 N = estimateNormal(p);
-    vec3 L = normalize(lightPos - p);
-    vec3 V = normalize(eye - p);
-    vec3 R = normalize(reflect(-L, N));
-    
-    float dotLN = dot(L, N);
-    float dotRV = dot(R, V);
-    
-    if (dotLN < 0.0)
+    // bounding volume    
+    vec2 dis = iBox(ro, rd, vec3(1.0, 1.0, 1.0));
+    if (dis.y < 0.0) return 1.0;
+
+    tmin = max(tmin, dis.x);
+    tmax = min(tmax, dis.y);
+
+    float t = tmin;
+    float res = 1.0;
+    for (int i = 0; i < 128; i++)
     {
-        // Light not visible from this point on the surface
-        return vec3(0.0, 0.0, 0.0);
+        float h = map(ro + t * rd).x;
+        res = min(res, h / (w * t));
+        t += clamp(h, 0.005, 0.50);
+        if (res<-1.0 || t>tmax) break;
     }
-    
-    if (dotRV < 0.0)
-    {
-        // Light reflection in opposite direction as viewer, apply only diffuse
-        // component
-        return lightIntensity * (k_d * dotLN);
-    }
-    return lightIntensity * (k_d * dotLN + k_s * pow(dotRV, alpha));
-}
+    res = max(res, -1.0); // clamp to [-1,1]
 
-/**
- * Lighting via Phong illumination.
- * 
- * The vec3 returned is the RGB color of that point after lighting is applied.
- * k_a: Ambient color
- * k_d: Diffuse color
- * k_s: Specular color
- * alpha: Shininess coefficient
- * p: position of point being lit
- * eye: the position of the camera
- *
- * See https://en.wikipedia.org/wiki/Phong_reflection_model#Description
- */
-vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 eye)
-{
-    const vec3 ambientLight = 0.5 * vec3(1.0, 1.0, 1.0);
-    vec3 color = ambientLight * k_a;
-    
-    vec3 light1Pos = vec3(4.0 * sin(iTime),
-                          2.0,
-                          4.0 * cos(iTime));
-    vec3 light1Intensity = vec3(0.4, 0.4, 0.4);
-    
-    color += phongContribForLight(k_d, k_s, alpha, p, eye,
-                                  light1Pos,
-                                  light1Intensity);
-    
-    return color;
+    return 0.25 * (1.0 + res) * (1.0 + res) * (2.0 - res); // smoothstep
 }
-
 
 void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 {
-	vec3 dir = ray.d; 
-    vec3 eye = ray.o; 
-    float dist = shortestDistanceToSurface(eye, dir, MIN_DIST, MAX_DIST);
+
+    vec3 col = vec3(0.01, 0.01, 0.01);
+    float2 dist = rayCast(ray.o, ray.d);
     
-    if (dist > MAX_DIST - EPSILON)
+    if (dist.x < 0.0)
     {
         // Didn't hit anything
         discard;
@@ -197,16 +267,39 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     }
     
     // The closest point on the surface to the eyepoint along the view ray
-    vec3 p = eye + dist * dir;
-    
-    vec3 K_a = vec3(0.2, 0.2, 0.2);
-    vec3 K_d = vec3(0.1, 0.1, 0.1);
-    vec3 K_s = vec3(1.0, 1.0, 1.0);
-    float shininess = 10.0;
-    
-    vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
-    
-    fragColor = vec4(color, 1.0);
+    vec3 p = ray.o + dist.x * ray.d;
+
+    vec3  nor = calcNormal(p);
+    float occ = dist.y * dist.y;
+
+    // material
+    vec3 mate = mix(vec3(0.6, 0.3, 0.1), vec3(1.0, 1.0, 1.0), dist.y) * 0.7;
+
+    // key light
+    {
+        const vec3 lig = normalize(vec3(1.0, 0.5, 0.6));
+        float dif = dot(lig, nor);
+        if (dif > 0.0) dif *= calcSoftShadow(p + nor * 0.001, lig, 0.001, 10.0, 0.003);
+        dif = clamp(dif, 0.0, 1.0);
+        vec3 hal = normalize(lig - ray.d);
+        float spe = clamp(dot(hal, nor), 0.0, 1.0);
+        spe = pow(spe, 4.0) * dif * (0.04 + 0.96 * pow(max(1.0 - dot(hal, lig), 0.0), 5.0));
+
+        col = vec3(0.0, 0.0, 0.0);
+        col += mate * 1.5 * vec3(1.30, 0.85, 0.75) * dif;
+        col += 9.0 * spe;
+    }
+    // ambient light
+    {
+        col += mate * 0.2 * vec3(0.40, 0.45, 0.60) * occ * (0.6 + 0.4 * nor.y);
+    }
+    // tonemap
+    col = col * 1.7 / (1.0 + col);
+
+    // gamma
+    col = pow(col, vec3(0.4545, 0.4545, 0.4545));
+
+    fragColor = vec4(col, 1.0);
 }
 
 float4 main(VS_Canvas input) : SV_Target

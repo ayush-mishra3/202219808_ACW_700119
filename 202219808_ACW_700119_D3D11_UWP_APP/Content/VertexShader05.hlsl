@@ -5,6 +5,12 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
     matrix projection;
 };
 
+cbuffer TimeConstantBuffer : register(b1)
+{
+    float iTime;
+    float3 padding;
+};
+
 struct VS_OUTPUT
 {
     float4 pos : SV_POSITION;
@@ -69,15 +75,18 @@ VS_OUTPUT main(float3 vPos : POSITION, float3 vCol : COLOR)
     float4 inPos = float4(vPos, 1.0);
     
 	// Transformations
-    float r = 5.0;
+    float r = 2.0;
     inPos.x = r * sin(inPos.y) * cos(inPos.x);
     inPos.y = r * sin(inPos.y) * sin(inPos.x) - 5.0;
-    inPos.z = r * cos(inPos.y);// * -0.3; // sin(iTime.x * 0.5);
+    inPos.z = r * cos(inPos.y) * sin(iTime.x * 0.5);
 
+    inPos = mul(inPos, model);
     inPos = mul(inPos, view);
     inPos = mul(inPos, projection);
-    inPos.x -= 10;
-    inPos.y -= 5;
+
+    inPos.x += 10;
+    inPos.y -= 0;
+    inPos.z -= 10;
     
     output.pos = inPos;
     output.color = ComputeGradient(inPos.xyz) + float3(1.0, 1.0, 1.0) * 0.2;
