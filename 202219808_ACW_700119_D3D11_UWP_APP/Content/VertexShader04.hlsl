@@ -16,7 +16,7 @@ VS_Canvas main(float3 vPos : POSITION)
 {
     VS_Canvas Output;
     vPos.xyz *= 10.0; 
-    vPos.z -= 20.0;
+    vPos.z -= 5.0;
     vPos.x -= 1.0;
   
     Output.Position = float4(vPos, 1.0);

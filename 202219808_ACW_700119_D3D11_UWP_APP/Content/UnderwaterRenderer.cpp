@@ -56,8 +56,8 @@ void UnderwaterRenderer::CreateWindowSizeDependentResources()
 	);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	static const XMVECTORF32 eye = { 0.0f, 4.0f, 2.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, 3.6f, 0.0f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 1.0f, 3.5f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, 1.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
