@@ -14,6 +14,12 @@ namespace _202219808_D3D11_APP
 		float time;
 		DirectX::XMFLOAT3 padding;
 	};
+	struct ResolutionBuffer
+	{
+		float screenX;
+		float screenY;
+		DirectX::XMFLOAT2 padding;
+	};
 
 	// Used to send per-vertex data to the vertex shader.
 	struct VertexPositionColor

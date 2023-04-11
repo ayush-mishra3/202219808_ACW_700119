@@ -55,6 +55,10 @@ float sphereSDF(vec3 samplePoint)
 {
     return length(samplePoint) - 1.0;
 }
+float bubbleSDF(vec3 samplePoint, vec3 position, float radius)
+{
+    return length(samplePoint - position) - radius;
+}
 
 /**
  * Signed distance function describing the scene.
@@ -65,7 +69,36 @@ float sphereSDF(vec3 samplePoint)
  */
 float sceneSDF(vec3 samplePoint)
 {
-    return sphereSDF(samplePoint);
+    //// Calculate position of the bubble in world space based on time
+    //vec3 bubblePosition = vec3(sin(iTime) * 5.5, iTime * 0.1, 0.0);
+
+    //// Calculate distance of samplePoint from the current bubble position
+    //float distance = length(samplePoint - bubblePosition);
+
+    //// Calculate the size of the bubble based on its distance from the top
+    //float bubbleRadius = mix(2.0, 0.5, bubblePosition.y / 2.0);
+
+    //// Return the signed distance to the surface of the bubble
+    //return distance - bubbleRadius;
+    
+    
+    // Calculate position and size of the first bubble in world space based on time
+    vec3 bubble1Position = vec3(sin(iTime) * 5.5, iTime * 0.1, 0.0);
+    float bubble1Radius = mix(2.0, 0.5, bubble1Position.y / 2.0);
+
+    // Calculate position and size of the second bubble in world space based on time
+    vec3 bubble2Position = vec3(cos(iTime) * 5.0, iTime * 0.07, -2.0);
+    float bubble2Radius = mix(1.0, 0.3, bubble2Position.y / 2.0);
+
+    // Calculate position and size of the third bubble in world space based on time
+    vec3 bubble3Position = vec3(0.0, iTime * 0.01, 3.0);
+    float bubble3Radius = mix(1.4, 0.2, bubble3Position.y / 2.0);
+
+    // Combine the signed distance functions of the bubbles using opUnion
+    float bubbleSDF1 = bubbleSDF(samplePoint, bubble1Position, bubble1Radius);
+    float bubbleSDF2 = bubbleSDF(samplePoint, bubble2Position, bubble2Radius);
+    float bubbleSDF3 = bubbleSDF(samplePoint, bubble3Position, bubble3Radius);
+    return min(bubbleSDF1, min(bubbleSDF2, bubbleSDF3));
 }
 
 /**
@@ -199,13 +232,18 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     vec3 p = eye + dist * dir;
     
     vec3 K_a = vec3(0.2, 0.2, 0.2);
-    vec3 K_d = vec3(0.2, 0.2, 0.8);
+    vec3 K_d = vec3(0.2, 0.2, 0.3);
     vec3 K_s = vec3(1.0, 1.0, 1.0);
-    float shininess = 10.0;
+    float shininess = 100.0;
     
     vec3 color = phongIllumination(K_a, K_d, K_s, shininess, p, eye);
     
     fragColor = vec4(color, 1.0);
+    
+     // Add transparency
+    float alpha = 0.1; // Set the transparency level
+    // Set the alpha channel and fade out the sphere near the edges
+    fragColor = vec4(color, alpha * (1.0 - smoothstep(0.0, 0.1, dist))); 
 }
 
 float4 main(VS_Canvas input) : SV_Target
@@ -216,7 +254,7 @@ float4 main(VS_Canvas input) : SV_Target
     eyeray.o = Eye.xyz;
 
 	// set ray direction in view space 
-    float dist2Imageplane = 1.0;
+    float dist2Imageplane = 0.2;
     float3 viewDir = float3(input.canvasXY, -dist2Imageplane);
     viewDir = normalize(viewDir);
     eyeray.d = viewDir;

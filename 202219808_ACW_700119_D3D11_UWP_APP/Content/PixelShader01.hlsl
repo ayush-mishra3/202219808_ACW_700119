@@ -3,7 +3,7 @@
 // https://www.shadertoy.com/view/4ljXWh
 
 #define TAU 6.28318530718
-#define MAX_ITER 5
+#define MAX_ITER 25
 
 #define vec2 float2 
 #define vec3 float3 
@@ -27,7 +27,14 @@ cbuffer ModelViewProjectionConstantBuffer : register(b0)
 cbuffer TimeConstantBuffer : register(b1)
 {
     float iTime;
-    float3 padding2;
+    float3 padding1;
+};
+
+cbuffer ResolutionConstantBuffer : register(b2)
+{
+    float screenX;
+    float screenY;
+    float2 padding2;
 };
 
 struct Ray
@@ -81,14 +88,14 @@ vec3 caustic(vec2 uv)
     float c = 1.0;
     float inten = .005;
 
-    for (int n = 0; n < MAX_ITER; n++)
+    for (int n = 0; n < MAX_ITER / 3; n++)
     {
         float t = time * (1.0 - (3.5 / float(n + 1)));
         i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
         c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
     }
 
-    c /= float(MAX_ITER);
+    c /= float(MAX_ITER/3);
     c = 1.17 - pow(c, 1.4);
     vec3 color = vec3(pow(abs(c), 8.0), pow(abs(c), 8.0), pow(abs(c), 8.0));
     color = clamp(color + vec3(0.0, 0.35, 0.5), 0.0, 1.0);
@@ -126,7 +133,7 @@ float GodRays(vec2 uv)
     light -= pow((1.0 - uv.y) * 0.3, 2.0) * 0.2;
     light += pow(causticX(sin(uv.x), 0.3, iTime * 0.7), 9.0) * 0.4;
     light += pow(causticX(cos(uv.x * 2.3), 0.3, iTime * 1.3), 4.0) * 0.1;
-    light -= pow((1.0 - uv.y) * 0.3, 3.0);
+    light -= pow((1.0 - uv.y) * 0.1, 1.5);
     light = clamp(light, 0.0, 1.0);
     return light;
 }
@@ -152,20 +159,16 @@ vec3 rayMarch(in vec3 ro, in vec3 rd, in float start, in float end)
     for (int i = 0; i < 255; i++)
     {
         vec3 p = ro + depth * rd;
-        // float dist = sceneSDF(p);
 
         float n = noise(p);
-        vec2 m = vec2(0.0, p.y - n);
+        vec2 m = vec2(0.0, p.y - n * 1.01);
         res = vec3(m, depth);
         float dist = res.y;
-
-        //if (dist < (0.001 * depth) || depth > end) { break;  }
 
         if (dist < (0.001 * depth)) { return res.z = depth; }
         depth +=  dist;
         if ( depth >= end) { return res.z = end;  }
 
-        //depth += 0.5 * dist;
     }
 
     return res;
@@ -180,8 +183,10 @@ vec3 getNormal(in vec3 p)
         noise(vec3(vec2(p.x, p.z - eps), 1.0)) - noise(vec3(vec2(p.x, p.z + eps), 1.0))));
 }
 
-float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
+float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
 {
+    float2 resXY = float2(screenX, screenY);
+    float2 uv = (-resXY.xy + 2.0 * float2(fragCoord.x, resXY.y - fragCoord.y)) / resXY.y;
     vec3 skyColor      = vec3(0.3, 1.0, 1.0);
     vec3 sunLightColor = vec3(1.7, 0.65, 0.65);
     vec3 skyLightColor = vec3(0.8, 0.35, 0.15);
@@ -199,7 +204,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
     // terrain marching
     float tmin = 0.1;
-    float tmax = 100.0;
+    float tmax = 50.0;
     vec3 res = rayMarch(ro, rd, tmin, tmax);
 
     vec3 colorBubble = vec3(0.0, 0.0, 0.0);
@@ -235,7 +240,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
         // add bumps
         nor = getNormal(pos);
-        nor = normalize(nor + 1.5 * getNormal(pos * 350.0));
+        nor = normalize(nor + 10.5 * getNormal(pos * 350.0));
 
         float sun = clamp(dot(sunDirection, nor), 0.0, 1.0);
         sky = clamp(0.5 + 0.5 * nor.y, 0.0, 1.0);
@@ -266,7 +271,9 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     }
 
     // special effects
-    color += colorBubble;
+    //color += colorBubble;
+    
+    
     color += GodRays(uv) * mix(skyColor.y, 1.0, uv.y * uv.y) * vec3(1.0, 1.0, 1.0);
 
     // gamma correction
@@ -295,6 +302,6 @@ float4 main(VS_Canvas input) : SV_Target
         + viewDir.z * viewTrans._31_32_33;
 
     float4 finalColor;
-    finalColor = render(eyeray, finalColor, input.Position.xy, input.canvasXY);
+    finalColor = render(eyeray, finalColor, input.Position.xy);
     return finalColor;
 }

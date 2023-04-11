@@ -78,7 +78,8 @@ VS_OUTPUT main(float3 vPos : POSITION, float3 vCol : COLOR)
     float r = 2.0;
     inPos.x = r * sin(inPos.y) * cos(inPos.x);
     inPos.y = r * sin(inPos.y) * sin(inPos.x) - 5.0;
-    inPos.z = r * cos(inPos.y) * sin(iTime.x * 0.5);
+    //inPos.z = r * cos(inPos.y) * sin(iTime.x * 0.5);
+    inPos.z = r * cos(inPos.y) * sin(inPos.x * 0.5);
 
     inPos = mul(inPos, model);
     inPos = mul(inPos, view);

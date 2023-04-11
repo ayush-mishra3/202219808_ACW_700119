@@ -351,11 +351,11 @@ void VSCoralRenderer::Render()
 		nullptr
 	);
 
-	// Draw the objects.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-	);
+	//// Draw the objects.
+	//context->DrawIndexed(
+	//	m_indexCount,
+	//	0,
+	//	0
+	//);
 
 }

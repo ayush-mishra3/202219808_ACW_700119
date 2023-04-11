@@ -101,11 +101,11 @@ void GSCoralRenderer::CreateDeviceDependentResources()
 	// After the geomtry shader file is loaded, create the shader and input layout.
 	auto createGSTask = loadGSTask.then([this](const std::vector<byte>& fileData) {
 		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateVertexShader(
+			m_deviceResources->GetD3DDevice()->CreateGeometryShader(
 				&fileData[0],
 				fileData.size(),
 				nullptr,
-				&m_vertexShader
+				&m_geometryShader
 			)
 		);
 		});
@@ -287,7 +287,7 @@ void GSCoralRenderer::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	context->IASetInputLayout(m_inputLayout.Get());
 
@@ -339,7 +339,7 @@ void GSCoralRenderer::Render()
 	auto device = m_deviceResources->GetD3DDevice();
 
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
 

@@ -48,14 +48,22 @@ static const float MIN_DIST = 0.0;
 static const float MAX_DIST = 100.0;
 static const float EPSILON = 0.0001;
 
-/**
- * Signed distance function for a sphere centered at the origin with radius 1.0;
- */
-float sphereSDF(vec3 samplePoint)
+float torus(vec3 p)
 {
-    return length(samplePoint) - 1.0;
+  vec2 t = vec2(0.5, 0.2);
+  vec2 q = vec2(length(p.xz) - t.x, p.y);
+    return length(q) - t.y;
 }
 
+float opTwist(in vec3 p)
+{
+    float k = 10. * 1.2;// (sin(iTime / 1.4)); // or some other amount
+    float c = cos(k * p.y);
+    float s = sin(k * p.y);
+    mat2 m = mat2(c, -s, s, c);
+    vec3 q = vec3(mul(m, p.xz), p.y);
+    return torus(q);
+}
 /**
  * Signed distance function describing the scene.
  * 
@@ -65,7 +73,10 @@ float sphereSDF(vec3 samplePoint)
  */
 float sceneSDF(vec3 samplePoint)
 {
-    return sphereSDF(samplePoint);
+    float distance1 = opTwist(samplePoint - vec3(0.0 + sin(iTime * 0.2) * 0.5, -0.5, 0.0));
+    float distance2 = opTwist(samplePoint - vec3(-3.0 + cos(iTime * 0.2) * 0.5, 0.0, 0.0));
+    float distance3 = opTwist(samplePoint - vec3(-2.0 + sin(iTime * 0.2) * 0.5, 0.1, 0.0));
+    return min(min(distance1, distance2), distance3);
 }
 
 /**

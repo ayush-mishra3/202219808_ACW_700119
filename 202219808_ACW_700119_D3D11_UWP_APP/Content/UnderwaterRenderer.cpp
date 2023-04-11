@@ -57,7 +57,7 @@ void UnderwaterRenderer::CreateWindowSizeDependentResources()
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
 	static const XMVECTORF32 eye = { 0.0f, 1.0f, 3.5f, 0.0f };
-	static const XMVECTORF32 at = { 0.0f, 1.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, 0.5f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
@@ -123,6 +123,15 @@ void UnderwaterRenderer::CreateDeviceDependentResources()
 			&timeBufferDesc,
 			nullptr,
 			&m_timeBuffer
+		)
+	);
+
+	CD3D11_BUFFER_DESC resBufferDesc(sizeof(ResolutionBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&resBufferDesc,
+			nullptr,
+			&m_resBuffer
 		)
 	);
 		});
@@ -213,6 +222,7 @@ void UnderwaterRenderer::ReleaseDeviceDependentResources()
 	m_pixelShader.Reset();
 	m_constantBuffer.Reset();
 	m_timeBuffer.Reset();
+	m_resBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
@@ -223,6 +233,10 @@ void UnderwaterRenderer::Update(DX::StepTimer const& timer)
 	m_timeBufferData.time = timer.GetTotalSeconds();
 
 	DirectX::XMStoreFloat4x4(&m_constantBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
+
+	m_resBufferData.screenX = static_cast<float>(m_deviceResources->GetOutputSize().Width);
+	m_resBufferData.screenY = static_cast<float>(m_deviceResources->GetOutputSize().Height);
+
 }
 
 // Renders one frame using the vertex and pixel shaders.
@@ -255,7 +269,21 @@ void UnderwaterRenderer::Render()
 		0,
 		0,
 		0
+
 	);
+
+	context->UpdateSubresource1(
+		m_resBuffer.Get(),
+		0,
+		NULL,
+		&m_resBufferData,
+		0,
+		0,
+		0
+
+	);
+
+
 	
 
 	// Each vertex is one instance of the VertexPositionColor struct.
@@ -344,6 +372,13 @@ void UnderwaterRenderer::Render()
 		1,
 		1,
 		m_timeBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_resBuffer.GetAddressOf(),
 		nullptr,
 		nullptr
 	);

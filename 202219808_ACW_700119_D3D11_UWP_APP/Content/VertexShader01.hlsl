@@ -14,11 +14,11 @@ struct VS_Canvas
 VS_Canvas main(float3 vPos : POSITION)
 {
 	VS_Canvas Output;
-	vPos.xyz *= 75.0; 
-	vPos.z += 20.0;
+	vPos.xyz *= 50.0; 
+	vPos.z += 15.0;
     
-    Output.Position = mul(float4(vPos, 1.0), model);
-    Output.Position = mul(Output.Position, view);
+    //Output.Position = mul(float4(vPos, 1.0), model);
+    Output.Position = mul(float4(vPos, 1.0), view);
     Output.Position = mul(Output.Position, projection);
 
 	float AspectRatio = projection._m11 / projection._m00;

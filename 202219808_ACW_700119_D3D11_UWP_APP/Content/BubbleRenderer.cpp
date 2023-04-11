@@ -295,6 +295,14 @@ void BubbleRenderer::Render()
 		nullptr
 	);
 
+	context->VSSetConstantBuffers1(
+		1,
+		1,
+		m_timeBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
 	context->HSSetShader(
 		nullptr,
 		nullptr,
