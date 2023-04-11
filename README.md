@@ -13,7 +13,7 @@
     - [ ] Geometry shader-based coral object. 
     - [ ] Hull and domain shader-based coral objects. 
 
-- [ ] Reflective bubbles. 
+- [x] Reflective bubbles. 
 
 - [x] A shoal of colourful coral reef fish created as a particle system.
     
