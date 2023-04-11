@@ -8,9 +8,9 @@
 
 - [ ] Coral objects. 
     
-    - [x] Vertex shader-based coral object. 
+    - [ ] Vertex shader-based coral object. 
     - [x] Pixel shader-based coral object. 
-    - [ ] Geometry shader-based coral object. 
+    - [x] Geometry shader-based coral object. 
     - [ ] Hull and domain shader-based coral objects. 
 
 - [x] Reflective bubbles. 
