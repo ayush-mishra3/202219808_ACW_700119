@@ -238,7 +238,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
         vec3 pos = ro + t * rd;
         vec3 nor;
 
-        // add bumps
+        //// add bumps
         nor = getNormal(pos);
         nor = normalize(nor + 10.5 * getNormal(pos * 350.0));
 
@@ -267,7 +267,7 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
         color += ((0.3 * caustic(vec2(uv.x, uv.y * 1.0))) + (0.3 * caustic(vec2(uv.x, uv.y * 2.7)))) * pow(uv.y, 4.0);
 
         // horizon
-        color = mix(color, horizonColor, pow(1.0 - pow(rd.y, 4.0), 20.0));
+        color = mix(color, horizonColor, pow(1.0 - pow(rd.y, 3.0), 20.0));
     }
 
     // special effects

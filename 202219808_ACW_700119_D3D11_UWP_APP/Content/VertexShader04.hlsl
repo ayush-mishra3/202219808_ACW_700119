@@ -15,10 +15,16 @@ struct VS_Canvas
 VS_Canvas main(float3 vPos : POSITION)
 {
     VS_Canvas Output;
-    vPos.xyz *= 30.0; 
-    vPos.z -= 15.0;
-    vPos.y += 0.;
-    vPos.x -= 12.0;
+    //vPos.xyz *= 30.0; 
+    //vPos.z -= 15.0;
+    //vPos.y += 0.;
+    //vPos.x -= 12.0;
+    vPos.xyz *= 25.0;
+    vPos.x += 4.5;
+    vPos.x *= 3.0;
+    vPos.y += 1.1;
+    vPos.y *= 3.0;
+    vPos.z -= 14.0;
   
     Output.Position = float4(vPos, 1.0);
     Output.Position = mul(Output.Position, view);

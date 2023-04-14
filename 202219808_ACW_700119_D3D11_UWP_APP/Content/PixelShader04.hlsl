@@ -181,6 +181,31 @@ float2 map(vec3 p)
     return dt;
 }
 
+vec3 caustic(vec2 uv)
+{
+    vec2 p = mod(uv * TAU, TAU) - 250.0;
+    float time = iTime * .5 + 23.0;
+
+    vec2 i = vec2(p);
+    float c = 1.0;
+    float inten = .005;
+
+    for (int n = 0; n < MAX_ITER / 3; n++)
+    {
+        float t = time * (1.0 - (3.5 / float(n + 1)));
+        i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+        c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten)));
+    }
+
+    c /= float(MAX_ITER / 3);
+    c = 1.17 - pow(c, 1.4);
+    vec3 color = vec3(pow(abs(c), 8.0), pow(abs(c), 8.0), pow(abs(c), 8.0));
+    color = clamp(color + vec3(0.0, 0.35, 0.5), 0.0, 1.0);
+    color = mix(color, vec3(1.0, 1.0, 1.0), 0.3);
+
+    return color;
+}
+
 /**
  * Return the shortest distance from the eyepoint to the scene surface along
  * the marching direction. If no part of the surface is found between start and end,
@@ -273,7 +298,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     float occ = dist.y * dist.y;
 
     // material
-    vec3 mate = mix(vec3(0.6, 0.3, 0.1), vec3(1.0, 1.0, 1.0), dist.y) * 0.7;
+    vec3 mate = mix(vec3(0.6, 0.3, 1.1), vec3(1.0, 1.0, 1.0), dist.y) * 0.7;
 
     // key light
     {
@@ -286,18 +311,21 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
         spe = pow(spe, 4.0) * dif * (0.04 + 0.96 * pow(max(1.0 - dot(hal, lig), 0.0), 5.0));
 
         col = vec3(0.0, 0.0, 0.0);
-        col += mate * 1.5 * vec3(1.30, 0.85, 0.75) * dif;
+        col += mate * 1.5 * vec3(1.30, 4.85, 0.75) * dif;
         col += 9.0 * spe;
     }
     // ambient light
     {
-        col += mate * 0.2 * vec3(0.40, 0.45, 0.60) * occ * (0.6 + 0.4 * nor.y);
+        col += mate * 0.2 * vec3(0.40, 1.45, 0.60) * occ * (0.6 + 0.3 * nor.y);
     }
     // tonemap
     col = col * 1.7 / (1.0 + col);
 
     // gamma
     col = pow(col, vec3(0.4545, 0.4545, 0.4545));
+
+    //caustic
+  //  col += ((0.3 * caustic(vec2(uv.x, uv.y * 1.0))) + (0.3 * caustic(vec2(uv.x, uv.y * 2.7)))) * pow(uv.y, 4.0);
 
     fragColor = vec4(col, 1.0);
 }
