@@ -1,3 +1,9 @@
+cbuffer TessBuffer : register(b0)
+{
+    float t;
+    float3 padding;
+};
+
 struct VS_OUTPUT
 {
     float4 pos : SV_POSITION;
@@ -12,9 +18,12 @@ struct HS_Tri_Tess_Factors
 HS_Tri_Tess_Factors ConstantHS_Tri(InputPatch<VS_OUTPUT, 3> ip)
 {
     HS_Tri_Tess_Factors Output;
-    float TessAmount = 31.0;
+    
+    float TessAmount = 10.0;
+    
     Output.Edges[0] = Output.Edges[1] = Output.Edges[2] = TessAmount;
     Output.Inside = TessAmount;
+    
     return Output;
 }
 

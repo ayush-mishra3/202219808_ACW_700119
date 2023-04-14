@@ -302,7 +302,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 
     // key light
     {
-        const vec3 lig = normalize(vec3(1.0, 0.5, 0.6));
+        const vec3 lig = normalize(vec3(0.8, 0.8, 0.6));
         float dif = dot(lig, nor);
         if (dif > 0.0) dif *= calcSoftShadow(p + nor * 0.001, lig, 0.001, 10.0, 0.003);
         dif = clamp(dif, 0.0, 1.0);

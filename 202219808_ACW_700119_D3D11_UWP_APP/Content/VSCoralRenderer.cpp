@@ -140,8 +140,8 @@ void VSCoralRenderer::CreateDeviceDependentResources()
 	static unsigned short quadIndices[iSize];
 
 
-	float xStep = XM_PI / (numSamples - 1);
-	float yStep = XM_2PI / (numSamples - 1);
+	float xStep = XM_2PI*8 / (numSamples - 1);
+	float yStep = XM_2PI*8 / (numSamples - 1);
 
 	UINT vertexFlag = 0;
 	UINT indexFlag = 0;
@@ -283,7 +283,7 @@ void VSCoralRenderer::Render()
 		0
 	);
 
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ);
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	context->IASetInputLayout(m_inputLayout.Get());
 
@@ -323,6 +323,12 @@ void VSCoralRenderer::Render()
 		0
 	);
 
+	context->GSSetShader(
+		nullptr,
+		nullptr,
+		0
+	);
+
 	// Rasterization
 	D3D11_RASTERIZER_DESC rasterizerDesc = CD3D11_RASTERIZER_DESC(D3D11_DEFAULT);
 
@@ -352,10 +358,10 @@ void VSCoralRenderer::Render()
 	);
 
 	//// Draw the objects.
-	//context->DrawIndexed(
-	//	m_indexCount,
-	//	0,
-	//	0
-	//);
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
 
 }

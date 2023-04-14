@@ -51,10 +51,7 @@ static const float EPSILON = 0.0001;
 /**
  * Signed distance function for a sphere centered at the origin with radius 1.0;
  */
-float sphereSDF(vec3 samplePoint)
-{
-    return length(samplePoint) - 1.0;
-}
+
 float bubbleSDF(vec3 samplePoint, vec3 position, float radius)
 {
     return length(samplePoint - position) - radius;
@@ -68,20 +65,7 @@ float bubbleSDF(vec3 samplePoint, vec3 position, float radius)
  * negative indicating inside.
  */
 float sceneSDF(vec3 samplePoint)
-{
-    //// Calculate position of the bubble in world space based on time
-    //vec3 bubblePosition = vec3(sin(iTime) * 5.5, iTime * 0.1, 0.0);
-
-    //// Calculate distance of samplePoint from the current bubble position
-    //float distance = length(samplePoint - bubblePosition);
-
-    //// Calculate the size of the bubble based on its distance from the top
-    //float bubbleRadius = mix(2.0, 0.5, bubblePosition.y / 2.0);
-
-    //// Return the signed distance to the surface of the bubble
-    //return distance - bubbleRadius;
-    
-    
+{  
     // Calculate position and size of the first bubble in world space based on time
     vec3 bubble1Position = vec3(sin(iTime) * 5.5, iTime * 0.1, 0.0);
     float bubble1Radius = mix(2.0, 0.5, bubble1Position.y / 2.0);
@@ -202,9 +186,7 @@ vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 e
     const vec3 ambientLight = 0.5 * vec3(1.0, 1.0, 1.0);
     vec3 color = ambientLight * k_a;
     
-    vec3 light1Pos = vec3(4.0 * sin(iTime),
-                          2.0,
-                          4.0 * cos(iTime));
+    vec3 light1Pos = vec3(0.8, 0.8, 0.6);
     vec3 light1Intensity = vec3(0.4, 0.4, 0.4);
     
     color += phongContribForLight(k_d, k_s, alpha, p, eye,
@@ -212,7 +194,6 @@ vec3 phongIllumination(vec3 k_a, vec3 k_d, vec3 k_s, float alpha, vec3 p, vec3 e
                                   light1Intensity);
     return color;
 }
-
 
 void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
 {

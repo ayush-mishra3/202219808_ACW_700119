@@ -63,7 +63,7 @@ float3 ComputeGradient(float3 position)
     float3 cyan = float3(0, 1, 1);
 
     // Interpolate between a dark and a light cyan color using the noise value
-    gradient *= lerp(cyan * 0.5, cyan, noiseValue);
+    gradient *= lerp(cyan * 0.8, cyan, noiseValue);
 
     return gradient * 0.8;
 }
@@ -74,20 +74,20 @@ VS_OUTPUT main(float3 vPos : POSITION, float3 vCol : COLOR)
 
     float4 inPos = float4(vPos, 1.0);
     
-	// Transformations
-    float r = 2.0;
-    inPos.x = r * sin(inPos.y) * cos(inPos.x);
-    inPos.y = r * sin(inPos.y) * sin(inPos.x) - 5.0;
-    //inPos.z = r * cos(inPos.y) * sin(iTime.x * 0.5);
-    inPos.z = r * cos(inPos.y) * sin(inPos.x * 0.5);
+	// Scaling
+    float r = 3.0;
+    inPos.x = r * sin(vPos.y) * cos(vPos.x);
+    inPos.y = r * sin(vPos.y) * sin(vPos.x);
+    inPos.z = r * cos(vPos.y) * sin(iTime.x * 0.5);
+  //  inPos.z = r * cos(inPos.y) * sin(inPos.x * 2.5);
 
-    inPos = mul(inPos, model);
+
+    inPos.x -= 5.5;
+    inPos.y -= 6.0;
+    inPos.z += 0.5;
+    //inPos = mul(inPos, model);
     inPos = mul(inPos, view);
     inPos = mul(inPos, projection);
-
-    inPos.x += 10;
-    inPos.y -= 0;
-    inPos.z -= 10;
     
     output.pos = inPos;
     output.color = ComputeGradient(inPos.xyz) + float3(1.0, 1.0, 1.0) * 0.2;

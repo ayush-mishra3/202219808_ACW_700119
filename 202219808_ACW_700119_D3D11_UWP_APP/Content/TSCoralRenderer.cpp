@@ -12,6 +12,7 @@ using namespace Windows::Foundation;
 TSCoralRenderer::TSCoralRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
 	m_loadingComplete(false),
 	m_indexCount(0),
+	m_tessFactor(31.0f),
 	m_deviceResources(deviceResources)
 {
 	CreateDeviceDependentResources();
@@ -150,6 +151,14 @@ void TSCoralRenderer::CreateDeviceDependentResources()
 			&m_timeBuffer
 		)
 	);
+	CD3D11_BUFFER_DESC tessBufferDesc(sizeof(TessBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&tessBufferDesc,
+			nullptr,
+			&m_tessBuffer
+		)
+	);
 		});
 
 	// Once both shaders are loaded, create the mesh.
@@ -166,61 +175,61 @@ void TSCoralRenderer::CreateDeviceDependentResources()
 		{XMFLOAT3(0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
 		{XMFLOAT3(0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
 		{XMFLOAT3(0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
-	};
-
-		D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
-		vertexBufferData.pSysMem = cubeVertices;
-		vertexBufferData.SysMemPitch = 0;
-		vertexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&vertexBufferDesc,
-				&vertexBufferData,
-				&m_vertexBuffer
-			)
-		);
-
-		// Load mesh indices. Each trio of indices represents
-		// a triangle to be rendered on the screen.
-		// For example: 0,2,1 means that the vertices with indexes
-		// 0, 2 and 1 from the vertex buffer compose the 
-		// first triangle of this mesh.
-		static const unsigned short cubeIndices[] =
-		{
-		0,2,1, // -x
-		1,2,3,
-
-		4,5,6, // +x
-		5,7,6,
-
-		0,1,5, // -y
-		0,5,4,
-
-		2,6,7, // +y
-		2,7,3,
-
-		0,4,6, // -z
-		0,6,2,
-
-		1,3,7, // +z
-		1,7,5,
 		};
 
-		m_indexCount = ARRAYSIZE(cubeIndices);
+	D3D11_SUBRESOURCE_DATA vertexBufferData = { 0 };
+	vertexBufferData.pSysMem = cubeVertices;
+	vertexBufferData.SysMemPitch = 0;
+	vertexBufferData.SysMemSlicePitch = 0;
+	CD3D11_BUFFER_DESC vertexBufferDesc(sizeof(cubeVertices), D3D11_BIND_VERTEX_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&vertexBufferDesc,
+			&vertexBufferData,
+			&m_vertexBuffer
+		)
+	);
 
-		D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
-		indexBufferData.pSysMem = cubeIndices;
-		indexBufferData.SysMemPitch = 0;
-		indexBufferData.SysMemSlicePitch = 0;
-		CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&indexBufferDesc,
-				&indexBufferData,
-				&m_indexBuffer
-			)
-		);
+	// Load mesh indices. Each trio of indices represents
+	// a triangle to be rendered on the screen.
+	// For example: 0,2,1 means that the vertices with indexes
+	// 0, 2 and 1 from the vertex buffer compose the 
+	// first triangle of this mesh.
+	static const unsigned short cubeIndices[] =
+	{
+	0,2,1, // -x
+	1,2,3,
+
+	4,5,6, // +x
+	5,7,6,
+
+	0,1,5, // -y
+	0,5,4,
+
+	2,6,7, // +y
+	2,7,3,
+
+	0,4,6, // -z
+	0,6,2,
+
+	1,3,7, // +z
+	1,7,5,
+	};
+
+	m_indexCount = ARRAYSIZE(cubeIndices);
+
+	D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
+	indexBufferData.pSysMem = cubeIndices;
+	indexBufferData.SysMemPitch = 0;
+	indexBufferData.SysMemSlicePitch = 0;
+	CD3D11_BUFFER_DESC indexBufferDesc(sizeof(cubeIndices), D3D11_BIND_INDEX_BUFFER);
+	DX::ThrowIfFailed(
+		m_deviceResources->GetD3DDevice()->CreateBuffer(
+			&indexBufferDesc,
+			&indexBufferData,
+			&m_indexBuffer
+		)
+	);
 
 		});
 
@@ -240,6 +249,7 @@ void TSCoralRenderer::ReleaseDeviceDependentResources()
 	m_pixelShader.Reset();
 	m_constantBuffer.Reset();
 	m_timeBuffer.Reset();
+	m_tessBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 }
@@ -247,8 +257,8 @@ void TSCoralRenderer::ReleaseDeviceDependentResources()
 // Called once per frame, rotates the cube and calculates the model and view matrices.
 void TSCoralRenderer::Update(DX::StepTimer const& timer)
 {
+	m_tessBufferData.tessAmount = m_tessFactor;
 	m_timeBufferData.time = timer.GetTotalSeconds();
-
 	DirectX::XMStoreFloat4x4(&m_constantBufferData.model, DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity()));
 
 }
@@ -264,6 +274,8 @@ void TSCoralRenderer::Render()
 
 	auto context = m_deviceResources->GetD3DDeviceContext();
 
+	m_tessBufferData.tessAmount = 31.0;
+
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
@@ -276,10 +288,20 @@ void TSCoralRenderer::Render()
 	);
 
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_timeBuffer.Get(),
 		0,
 		NULL,
 		&m_timeBufferData,
+		0,
+		0,
+		0
+	);
+
+	context->UpdateSubresource1(
+		m_tessBuffer.Get(),
+		0,
+		NULL,
+		&m_tessBufferData,
 		0,
 		0,
 		0
@@ -320,6 +342,14 @@ void TSCoralRenderer::Render()
 		0
 	);
 
+	context->HSSetConstantBuffers1(
+		0,
+		1,
+		m_tessBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
 	// Attach our domain shader.
 	context->DSSetShader(
 		m_domainShader.Get(),
@@ -335,13 +365,14 @@ void TSCoralRenderer::Render()
 		nullptr,
 		nullptr
 	);
-	context->DSSetConstantBuffers1(
-		1,
-		1,
-		m_timeBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
+	//context->DSSetConstantBuffers1(
+	//	1,
+	//	1,
+	//	m_timeBuffer.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+
 
 	// Detach our hull shader.
 	context->GSSetShader(
@@ -356,7 +387,7 @@ void TSCoralRenderer::Render()
 	auto device = m_deviceResources->GetD3DDevice();
 
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
-	rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	device->CreateRasterizerState(&rasterizerDesc,
 		m_rasterizerState.GetAddressOf());
 

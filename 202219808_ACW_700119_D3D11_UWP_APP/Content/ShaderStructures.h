@@ -20,6 +20,11 @@ namespace _202219808_D3D11_APP
 		float screenY;
 		DirectX::XMFLOAT2 padding;
 	};
+	struct TessBuffer
+	{
+		float tessAmount;
+		DirectX::XMFLOAT3 padding;
+	};
 
 	// Used to send per-vertex data to the vertex shader.
 	struct VertexPositionColor
