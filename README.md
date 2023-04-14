@@ -6,12 +6,12 @@
 
 - [x] Procedural sea floor. 
 
-- [ ] Coral objects. 
+- [x] Coral objects. 
     
     - [x] Vertex shader-based coral object. 
     - [x] Pixel shader-based coral object. 
     - [x] Geometry shader-based coral object. 
-    - [ ] Hull and domain shader-based coral objects. 
+    - [x] Hull and domain shader-based coral objects. 
 
 - [x] Reflective bubbles. 
 
