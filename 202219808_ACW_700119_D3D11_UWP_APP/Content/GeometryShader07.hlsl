@@ -41,7 +41,7 @@ TriangleStream<PixelShaderInput> OutputStream)
     float4 mid12 = (v1.pos + v2.pos) * 0.5f;
     float4 mid20 = (v2.pos + v0.pos) * 0.5f;
 
-    float spikeFactor = 0.9;
+    float spikeFactor = 1.0;
 
     float4 spikeDir1 = float4(-1.0f, 0.0f, 0.0f, 0.0f);
     float4 spikeDir2 = float4(0.0f, 1.0f, 0.0f, 0.0f);

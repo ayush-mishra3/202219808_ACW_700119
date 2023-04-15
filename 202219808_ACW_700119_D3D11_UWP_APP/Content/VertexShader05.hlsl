@@ -85,6 +85,7 @@ VS_OUTPUT main(float3 vPos : POSITION, float3 vCol : COLOR)
     inPos.x -= 5.5;
     inPos.y -= 6.0;
     inPos.z += 0.5;
+
     //inPos = mul(inPos, model);
     inPos = mul(inPos, view);
     inPos = mul(inPos, projection);

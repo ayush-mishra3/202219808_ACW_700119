@@ -271,15 +271,15 @@ float4 render(Ray ray, out vec4 fragColor, in vec2 fragCoord)
     }
 
     // special effects
-    //color += colorBubble;
+   // color += colorBubble;
     
     
     color += GodRays(uv) * mix(skyColor.y, 1.0, uv.y * uv.y) * vec3(1.0, 1.0, 1.0);
 
     // gamma correction
-    //vec3 gamma = vec3(0.46, 0.46, 0.46);
-    //fragColor = vec4(pow(color, gamma), 1.0);
-    //return fragColor;
+  //  vec3 gamma = vec3(0.46, 0.46, 0.46);
+  //  fragColor = vec4(pow(color, gamma), 1.0);
+  //  return fragColor;
     return fragColor = float4(color, 1.0);
 }
 

@@ -15,7 +15,7 @@
 #define mix lerp
 #define mod fmod
 
-static float4 Eye = float4(0, 1.0, 5.0, 1);
+static float4 Eye = float4(0.0, 1.0, 5.0, 1);
 
 cbuffer ModelViewProjectionConstantBuffer : register(b0)
 {
@@ -222,7 +222,7 @@ void render(Ray ray, out vec4 fragColor, in vec2 fragCoord, in vec2 uv)
     fragColor = vec4(color, 1.0);
     
      // Add transparency
-    float alpha = 0.1; // Set the transparency level
+    float alpha = 1.5; // Set the transparency level
     // Set the alpha channel and fade out the sphere near the edges
     fragColor = vec4(color, alpha * (1.0 - smoothstep(0.0, 0.1, dist))); 
 }
